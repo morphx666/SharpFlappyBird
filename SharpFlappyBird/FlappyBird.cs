@@ -62,7 +62,6 @@ namespace SharpFlappyBird {
             spriteRect = new RectangleF(0, 0, spriteWidth, sprite.Height);
 
             SetSpriteRect();
-            CreatePipes();
 
             bgImgHeight = backgroundImage.Height;
 
@@ -76,7 +75,11 @@ namespace SharpFlappyBird {
         public Vector Acceleration { get; set; }
 
         private void Up() {
-            if(spriteState == SpriteStates.Waiting) spriteState = SpriteStates.Normal;
+            if(spriteState == SpriteStates.Waiting) {
+                frameCount = 0;
+                CreatePipes();
+                spriteState = SpriteStates.Normal;
+            }
             Acceleration = new Vector(8, 270, Origin);
             Velocity.Magnitude = 0;
         }
@@ -124,7 +127,7 @@ namespace SharpFlappyBird {
                             spriteState = SpriteStates.Up;
                             c = 0;
                         } else {
-                            if(c++ > 8)
+                            if(c++ >= 20)
                                 spriteState = SpriteStates.Falling;
                             else // This looks nice, but it's not how the original game behaves
                                 ;//spriteState = SpriteStates.Down;
@@ -218,7 +221,7 @@ namespace SharpFlappyBird {
         }
 
         private bool CheckCollision() {
-            // Collision gainst floor
+            // Collision with floor
             if(base.Y1 + spriteWidth >= bgImgHeight) return true;
 
             // TODO: Implement collision detection against pipes
@@ -226,6 +229,8 @@ namespace SharpFlappyBird {
         }
 
         private void CreatePipes() {
+            pipes.Clear();
+
             var r = new Random();
             for(int i = 1; i <= 10; i++) {
                 pipes.Add((600 * i, r.Next(2, 8) / 10.0));

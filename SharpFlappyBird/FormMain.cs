@@ -31,7 +31,7 @@ namespace SharpFlappyBird {
             // Center screen
             Rectangle sb = Screen.FromControl(this).Bounds;
             this.Location = new Point((sb.Width - this.Width) / 2,
-                                      (sb.Height - (this.Height + 16)) / 2);
+                                      (sb.Height - (this.Height + SystemInformation.CaptionHeight)) / 2);
         }
 
         private static string GetAsset(string assetFileName) {
