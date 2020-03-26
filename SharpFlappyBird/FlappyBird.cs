@@ -202,6 +202,8 @@ namespace SharpFlappyBird {
             double gap = 1.0 - 0.25; // 25% gap
             int xOffset;
             int h = pipeImage.Height - groundImage.Height;
+            double factor = h * gap;
+            double topOffset = h * (1.0 - gap);
 
             foreach((int FrameCount, double GapPosition) pipe in pipes) {
                 xOffset = frameCount * horizontalSpeed;
@@ -210,11 +212,11 @@ namespace SharpFlappyBird {
 
                     // Bottom Pipe
                     g.DrawImageUnscaled(pipeImage, xOffset,
-                        (int)(bgImgHeight - h * pipe.GapPosition * gap));
+                        (int)(bgImgHeight - pipe.GapPosition * factor));
 
                     // Top Pipe
                     g.DrawImageUnscaled(pipeInvertedImage, xOffset,
-                        (int)(-h * pipe.GapPosition * gap - h * (1.0 - gap)));
+                        (int)(-factor * pipe.GapPosition - topOffset));
                 } else
                     break;
             }
