@@ -63,7 +63,7 @@ namespace SharpFlappyBird {
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
             sprite = birdImage;
-            spriteRect = new RectangleF(0, 0, birdImage.Width / 3, sprite.Height);
+            spriteRect = new RectangleF(0, 0, sprite.Width / 3, sprite.Height);
             spriteW2 = (int)(spriteRect.Width / 2);
             spriteH2 = (int)(spriteRect.Height / 2);
 
@@ -71,9 +71,7 @@ namespace SharpFlappyBird {
 
             bgImgHeight = backgroundImage.Height;
 
-            Velocity = new Vector(0, 0, 50, 0);
-            Acceleration = new Vector(Velocity);
-
+            ResetGame();
             InitGame();
             RunGameLogic();
         }
@@ -98,9 +96,24 @@ namespace SharpFlappyBird {
                     case Keys.Space:
                         Up();
                         break;
+                    case Keys.Enter:
+                        if(gameState == GameStates.GameOver) ResetGame();
+                        break;
                 }
             };
-            surface.SizeChanged += (_, __) => base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.50 - spriteH2);
+        }
+
+        private void ResetGame() {
+            Velocity = new Vector(0, 0, 50, 0);
+            Acceleration = new Vector(Velocity);
+            frameCount = 0;
+            pipes.Clear();
+            while(!collisionRects.IsEmpty) collisionRects.TryTake(out _);
+            spriteAngle = 0;
+            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.50 - spriteH2);
+
+            spriteState = SpriteStates.Waiting;
+            gameState = GameStates.Normal;
         }
 
         private void RunGameLogic() {
