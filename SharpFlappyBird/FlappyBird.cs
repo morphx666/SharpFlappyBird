@@ -67,8 +67,6 @@ namespace SharpFlappyBird {
             spriteW2 = (int)(spriteRect.Width / 2);
             spriteH2 = (int)(spriteRect.Height / 2);
 
-            SetSpriteRect();
-
             bgImgHeight = backgroundImage.Height;
 
             ResetGame();
@@ -90,7 +88,6 @@ namespace SharpFlappyBird {
         }
 
         private void InitGame() {
-            surface.Paint += DrawScene;
             surface.KeyDown += (object s, KeyEventArgs e) => {
                 switch(e.KeyCode) {
                     case Keys.Space:
@@ -107,6 +104,8 @@ namespace SharpFlappyBird {
             Velocity = new Vector(0, 0, 50, 0);
             Acceleration = new Vector(Velocity);
             frameCount = 0;
+            spriteIndex = 1;
+            SetSpriteRect(true);
             pipes.Clear();
             while(!collisionRects.IsEmpty) collisionRects.TryTake(out _);
             spriteAngle = 0;
@@ -118,23 +117,23 @@ namespace SharpFlappyBird {
 
         private void RunGameLogic() {
             Task.Run(() => {
-                Vector gUp = new Vector(1.1, 90, this.Origin);
-                Vector gDn = new Vector(0.50, 90, this.Origin);
-                int c = 0;
+                Vector gUp = new Vector(1.0, 90, this.Origin);
+                Vector gDn = new Vector(0.7, 90, this.Origin);
+                int fallDelay = 0;
                 int animateSprite = 0;
 
                 while(true) {
                     Thread.Sleep(11);
 
-                    if(animateSprite == 0) SetSpriteRect();
+                    if(animateSprite == 0) SetSpriteRect(false);
                     animateSprite = animateSprite >= 8 ? 0 : animateSprite + 1;
 
-                    if(CheckCollision()) {
-                        if(gameState == GameStates.GameOver)
-                            base.Y1 = bgImgHeight - spriteRect.Height; // FIXME: Calculate the actual height of the sprite based on its rotation
-                    }
-
                     if(spriteState != SpriteStates.Waiting && gameState != GameStates.GameOver) {
+                        if(CheckCollision()) {
+                            if(gameState == GameStates.GameOver)
+                                base.Y1 = bgImgHeight - spriteRect.Height; // FIXME: Calculate the actual height of the sprite based on its rotation
+                        }
+
                         base.Move(Velocity);
                         Acceleration += gUp;
                         if(Acceleration.Angle == 270)
@@ -145,9 +144,9 @@ namespace SharpFlappyBird {
 
                         if(Velocity.Angle == 270) {
                             spriteState = SpriteStates.Up;
-                            c = 0;
+                            fallDelay = 0;
                         } else {
-                            if(c++ >= 20)
+                            if(fallDelay++ >= 20)
                                 spriteState = SpriteStates.Falling;
                             else // This looks nice, but it's not how the original game behaves
                                 ;//spriteState = SpriteStates.Down;
@@ -159,19 +158,23 @@ namespace SharpFlappyBird {
             });
         }
 
-        private void SetSpriteRect() {
-            if(gameState == GameStates.Normal) {
+        private void SetSpriteRect(bool force) {
+            if(force || (gameState == GameStates.Normal && spriteState != SpriteStates.Waiting)) {
                 spriteRect.X = spriteIndex * spriteRect.Width;
                 spriteIndex = ++spriteIndex >= 3 ? 0 : spriteIndex;
             }
         }
 
-        private void DrawScene(object sender, PaintEventArgs e) {
+        public void DrawScene(PaintEventArgs e) {
             Graphics g = e.Graphics;
 
-            g.ScaleTransform(Scale, Scale);
-            g.DrawImageUnscaled(backgroundImage, 0, 0);
             g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+
+            g.ScaleTransform(Scale, Scale);
+
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            g.DrawImageUnscaled(backgroundImage, 0, 0);
+            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
 
             RenderPipes(g);
             RenderGround(g);
@@ -180,7 +183,7 @@ namespace SharpFlappyBird {
             if(gameState == GameStates.Normal) frameCount += 1;
         }
 
-        public void RenderSprite(Graphics g) {
+        private void RenderSprite(Graphics g) {
             g.TranslateTransform((float)(base.X1 + spriteW2),
                                  (float)(base.Y1 + spriteH2));
 

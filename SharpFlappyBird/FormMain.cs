@@ -11,7 +11,8 @@ namespace SharpFlappyBird {
 
             this.SetStyle(ControlStyles.AllPaintingInWmPaint |
                           ControlStyles.UserPaint |
-                          ControlStyles.OptimizedDoubleBuffer, true);
+                          ControlStyles.OptimizedDoubleBuffer,
+                          true);
 
             Image bImg = Image.FromFile(GetAsset("background.png"));
             Image gImg = Image.FromFile(GetAsset("ground.png"));
@@ -34,6 +35,10 @@ namespace SharpFlappyBird {
 
         private static string GetAsset(string assetFileName) {
             return Path.GetFullPath(Path.Combine("Assets", assetFileName));
+        }
+
+        protected override void OnPaint(PaintEventArgs e) {
+            bird.DrawScene(e);
         }
     }
 }
