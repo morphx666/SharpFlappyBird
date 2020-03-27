@@ -1,6 +1,6 @@
 ﻿using System;
+using System.Collections.Concurrent;
 using System.Collections.Generic;
-using System.Diagnostics;
 using System.Drawing;
 using System.Threading;
 using System.Threading.Tasks;
@@ -18,20 +18,26 @@ namespace SharpFlappyBird {
             Up = 0,
             Normal = 1,
             Down = 2,
-            Falling = 3,
-            GameOver = 4
+            Falling = 3
+        }
+
+        private enum GameStates {
+            Normal = 0,
+            Crashed = 1,
+            GameOver
         }
 
         private readonly Image sprite;
         private int spriteIndex;
-        private readonly int spriteWidth;
         private readonly int spriteW2;
         private readonly int spriteH2;
         private RectangleF spriteRect;
         private SpriteStates spriteState = SpriteStates.Waiting;
         private int spriteAngle = 0;
         private readonly Control surface;
-        private int horizontalSpeed = 5;
+        private readonly int horizontalSpeed = 5;
+
+        private GameStates gameState = GameStates.Normal;
 
         private readonly Image backgroundImage;
         private readonly Image groundImage;
@@ -41,7 +47,8 @@ namespace SharpFlappyBird {
 
         private double birdOsc = 0;
         private int frameCount = 0;
-        private List<(int FrameCount, double GapPosition)> pipes = new List<(int FrameCount, double GapPosition)>();
+        private readonly List<(int FrameCount, double GapPosition)> pipes = new List<(int FrameCount, double GapPosition)>();
+        private readonly ConcurrentBag<Rectangle> collisionRects = new ConcurrentBag<Rectangle>();
 
         public FlappyBird(Control surface,
                           Image birdImage,
@@ -56,10 +63,9 @@ namespace SharpFlappyBird {
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
             sprite = birdImage;
-            spriteWidth = birdImage.Width / 3;
-            spriteW2 = spriteWidth / 2;
-            spriteH2 = sprite.Height / 2;
-            spriteRect = new RectangleF(0, 0, spriteWidth, sprite.Height);
+            spriteRect = new RectangleF(0, 0, birdImage.Width / 3, sprite.Height);
+            spriteW2 = (int)(spriteRect.Width / 2);
+            spriteH2 = (int)(spriteRect.Height / 2);
 
             SetSpriteRect();
 
@@ -75,6 +81,7 @@ namespace SharpFlappyBird {
         public Vector Acceleration { get; set; }
 
         private void Up() {
+            if(gameState != GameStates.Normal) return;
             if(spriteState == SpriteStates.Waiting) {
                 frameCount = 0;
                 CreatePipes();
@@ -110,11 +117,11 @@ namespace SharpFlappyBird {
                     animateSprite = animateSprite >= 8 ? 0 : animateSprite + 1;
 
                     if(CheckCollision()) {
-                        spriteState = SpriteStates.GameOver;
-                        base.Y1 = bgImgHeight - spriteRect.Height; // FIXME: Calculate the actual height of the sprite based on its rotation
+                        if(gameState == GameStates.GameOver)
+                            base.Y1 = bgImgHeight - spriteRect.Height; // FIXME: Calculate the actual height of the sprite based on its rotation
                     }
 
-                    if(spriteState != SpriteStates.Waiting && spriteState != SpriteStates.GameOver) {
+                    if(spriteState != SpriteStates.Waiting && gameState != GameStates.GameOver) {
                         base.Move(Velocity);
                         Acceleration += gUp;
                         if(Acceleration.Angle == 270)
@@ -140,8 +147,8 @@ namespace SharpFlappyBird {
         }
 
         private void SetSpriteRect() {
-            if(spriteState != SpriteStates.GameOver) {
-                spriteRect.X = spriteIndex * spriteWidth;
+            if(gameState == GameStates.Normal) {
+                spriteRect.X = spriteIndex * spriteRect.Width;
                 spriteIndex = ++spriteIndex >= 3 ? 0 : spriteIndex;
             }
         }
@@ -157,7 +164,7 @@ namespace SharpFlappyBird {
             RenderGround(g);
             RenderSprite(g);
 
-            if(spriteState != SpriteStates.GameOver) frameCount += 1;
+            if(gameState == GameStates.Normal) frameCount += 1;
         }
 
         public void RenderSprite(Graphics g) {
@@ -213,10 +220,12 @@ namespace SharpFlappyBird {
                     // Bottom Pipe
                     g.DrawImageUnscaled(pipeImage, xOffset,
                         (int)(bgImgHeight - pipe.GapPosition * factor));
+                    collisionRects.Add(new Rectangle(xOffset, (int)(bgImgHeight - pipe.GapPosition * factor), pipeImage.Width, pipeImage.Height));
 
                     // Top Pipe
                     g.DrawImageUnscaled(pipeInvertedImage, xOffset,
                         (int)(-factor * pipe.GapPosition - topOffset));
+                    collisionRects.Add(new Rectangle(xOffset, (int)(-factor * pipe.GapPosition - topOffset), pipeImage.Width, pipeImage.Height));
                 } else
                     break;
             }
@@ -224,9 +233,21 @@ namespace SharpFlappyBird {
 
         private bool CheckCollision() {
             // Collision with floor
-            if(base.Y1 + spriteWidth >= bgImgHeight) return true;
+            if(base.Y1 + spriteRect.Width >= bgImgHeight) {
+                gameState = GameStates.GameOver;
+                return true;
+            }
 
-            // TODO: Implement collision detection against pipes
+            Rectangle sr = new Rectangle((int)base.X1,
+                                         (int)base.Y1,
+                                         (int)spriteRect.Width,
+                                         (int)spriteRect.Height);
+            while(collisionRects.TryTake(out Rectangle cr)) {
+                if(cr.IntersectsWith(sr)) {
+                    gameState = GameStates.Crashed;
+                    return true;
+                }
+            }
             return false;
         }
 
@@ -235,7 +256,8 @@ namespace SharpFlappyBird {
 
             var r = new Random();
             for(int i = 1; i <= 10; i++) {
-                pipes.Add((600 * i, r.Next(2, 8) / 10.0));
+                pipes.Add((FrameCount: 600 * i,
+                           GapPosition: r.Next(2, 8) / 10.0));
             }
         }
     }
