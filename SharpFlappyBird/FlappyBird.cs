@@ -12,9 +12,9 @@ using RayCasting;
 
 namespace SharpFlappyBird {
     public class FlappyBird : Vector {
-        public Vector Velocity;
-        public Vector Acceeration;
         public float Scale = 0.65f;
+        private Vector velocity;
+        private Vector acceleration;
 
         private enum SpriteStates {
             Waiting = -1,
@@ -117,24 +117,6 @@ namespace SharpFlappyBird {
             sndHndGameOver = Bass.CreateStream(gameOverSound);
         }
 
-        private void SetupBASS() {
-            string platform = Runtime.Platform.ToString().ToLower();
-            string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.Mac ? "x64" : "x86";
-
-            if(platform.StartsWith("arm")) {
-                architecture = platform.EndsWith("hard") ? "hardfp" : "softfp";
-                platform = "arm";
-            }
-
-            string path = Path.GetFullPath(Path.Combine("Bass", platform, architecture));
-            FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
-            File.Copy(lib.FullName, Path.GetFullPath(Path.Combine(lib.Name)), true);
-
-            Bass.Init();
-        }
-
-        public Vector Acceleration { get; set; }
-
         private void Up() {
             if(gameState != GameStates.Normal) return;
             if(spriteState == SpriteStates.Waiting) {
@@ -142,8 +124,8 @@ namespace SharpFlappyBird {
                 CreatePipes();
                 spriteState = SpriteStates.Normal;
             }
-            Acceleration = new Vector(8, 270, Origin);
-            Velocity.Magnitude = 0;
+            acceleration = new Vector(8, 270, Origin);
+            velocity.Magnitude = 0;
 
             Bass.ChannelPlay(sndHndJump, true);
         }
@@ -162,8 +144,8 @@ namespace SharpFlappyBird {
         }
 
         private void ResetGame() {
-            Velocity = new Vector(0, 0, 50, 0);
-            Acceleration = new Vector(Velocity);
+            velocity = new Vector(0, 0, 50, 0);
+            acceleration = new Vector(velocity);
             frameCount = 0;
             spriteIndex = 1;
             score = 0;
@@ -196,15 +178,15 @@ namespace SharpFlappyBird {
                                 base.Y1 = bgImgHeight - spriteRect.Height; // FIXME: Calculate the actual height of the sprite based on its rotation
                         }
 
-                        base.Move(Velocity);
-                        Acceleration += gUp;
-                        if(Acceleration.Angle == 270)
-                            Acceleration += gUp;
+                        base.Move(velocity);
+                        acceleration += gUp;
+                        if(acceleration.Angle == 270)
+                            acceleration += gUp;
                         else
-                            Acceleration = gDn;
-                        Velocity += Acceleration;
+                            acceleration = gDn;
+                        velocity += acceleration;
 
-                        if(Velocity.Angle == 270) {
+                        if(velocity.Angle == 270) {
                             spriteState = SpriteStates.Up;
                             fallDelay = 0;
                         } else {
@@ -345,8 +327,7 @@ namespace SharpFlappyBird {
         }
 
         private bool CheckCollision() {
-            // Collision with floor
-            if(base.Y1 + spriteRect.Width >= bgImgHeight) {
+            if(base.Y1 + spriteRect.Width >= bgImgHeight) { // Collision with floor
                 gameState = GameStates.GameOver;
                 Bass.ChannelPlay(sndHndGameOver, true);
                 return true;
@@ -372,6 +353,22 @@ namespace SharpFlappyBird {
             for(int i = 1; i <= 10; i++) {
                 pipes.Add(new Pipe(600 * i, r.Next(2, 8) / 10.0, false));
             }
+        }
+
+        private void SetupBASS() {
+            string platform = Runtime.Platform.ToString().ToLower();
+            string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.Mac ? "x64" : "x86";
+
+            if(platform.StartsWith("arm")) {
+                architecture = platform.EndsWith("hard") ? "hardfp" : "softfp";
+                platform = "arm";
+            }
+
+            string path = Path.GetFullPath(Path.Combine("Bass", platform, architecture));
+            FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
+            File.Copy(lib.FullName, Path.GetFullPath(Path.Combine(lib.Name)), true);
+
+            Bass.Init();
         }
     }
 }
