@@ -2,6 +2,7 @@
 using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
+using System.Drawing.Drawing2D;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
@@ -27,6 +28,18 @@ namespace SharpFlappyBird {
             GameOver
         }
 
+        private class Pipe {
+            public int FrameCount;
+            public double GapPosition;
+            public bool Passed;
+
+            public Pipe(int frameCount, double gapPosition, bool passed) {
+                FrameCount = frameCount;
+                GapPosition = gapPosition;
+                Passed = passed;
+            }
+        }
+
         private readonly Image sprite;
         private int spriteIndex;
         private readonly int spriteW2;
@@ -36,6 +49,7 @@ namespace SharpFlappyBird {
         private int spriteAngle = 0;
         private readonly Control surface;
         private readonly int horizontalSpeed = 5;
+        private int score;
 
         private GameStates gameState = GameStates.Normal;
 
@@ -45,22 +59,37 @@ namespace SharpFlappyBird {
         private readonly Image pipeInvertedImage;
         private readonly int bgImgHeight;
 
+        private readonly Font gameFontLarge;
+        private readonly Font gameFontSmall;
+        private readonly StringFormat sf;
+
         private double birdOsc = 0;
         private int frameCount = 0;
-        private readonly List<(int FrameCount, double GapPosition)> pipes = new List<(int FrameCount, double GapPosition)>();
+        private readonly List<Pipe> pipes = new List<Pipe>();
         private readonly ConcurrentBag<Rectangle> collisionRects = new ConcurrentBag<Rectangle>();
+
+        private bool isMonoRT = Type.GetType("System.MonoType") != null;
+        MethodInvoker paintSurface;
 
         public FlappyBird(Control surface,
                           Image birdImage,
                           Image backgroundImage,
                           Image groundImage,
-                          Image pipeImage) : base(0, 0, 50, 0) {
+                          Image pipeImage,
+                          FontFamily gameFontFamily) : base(0, 0, 50, 0) {
             this.surface = surface;
+            paintSurface = new MethodInvoker(() => surface.Invalidate());
+
             this.backgroundImage = backgroundImage;
             this.groundImage = groundImage;
             this.pipeImage = pipeImage;
             this.pipeInvertedImage = (Image)pipeImage.Clone();
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
+
+            this.gameFontLarge = new Font(gameFontFamily, 30, FontStyle.Regular);
+            this.gameFontSmall = new Font(gameFontFamily, 18, FontStyle.Regular);
+            sf = new StringFormat();
+            sf.Alignment = StringAlignment.Center;
 
             sprite = birdImage;
             spriteRect = new RectangleF(0, 0, sprite.Width / 3, sprite.Height);
@@ -105,11 +134,12 @@ namespace SharpFlappyBird {
             Acceleration = new Vector(Velocity);
             frameCount = 0;
             spriteIndex = 1;
+            score = 0;
             SetSpriteRect(true);
             pipes.Clear();
             while(!collisionRects.IsEmpty) collisionRects.TryTake(out _);
             spriteAngle = 0;
-            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.50 - spriteH2);
+            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.53 - spriteH2);
 
             spriteState = SpriteStates.Waiting;
             gameState = GameStates.Normal;
@@ -153,13 +183,13 @@ namespace SharpFlappyBird {
                         }
                     }
 
-                    surface.Invalidate();
+                    if(surface.IsHandleCreated) surface.BeginInvoke(paintSurface);
                 }
             });
         }
 
         private void SetSpriteRect(bool force) {
-            if(force || (gameState == GameStates.Normal && spriteState != SpriteStates.Waiting)) {
+            if(force || (gameState == GameStates.Normal)) {
                 spriteRect.X = spriteIndex * spriteRect.Width;
                 spriteIndex = ++spriteIndex >= 3 ? 0 : spriteIndex;
             }
@@ -168,19 +198,46 @@ namespace SharpFlappyBird {
         public void DrawScene(PaintEventArgs e) {
             Graphics g = e.Graphics;
 
-            g.InterpolationMode = System.Drawing.Drawing2D.InterpolationMode.NearestNeighbor;
+            g.InterpolationMode = InterpolationMode.NearestNeighbor;
 
             g.ScaleTransform(Scale, Scale);
 
-            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceCopy;
+            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceCopy;
             g.DrawImageUnscaled(backgroundImage, 0, 0);
-            g.CompositingMode = System.Drawing.Drawing2D.CompositingMode.SourceOver;
+            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceOver;
 
             RenderPipes(g);
+            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceCopy;
             RenderGround(g);
+            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceOver;
             RenderSprite(g);
 
             if(gameState == GameStates.Normal) frameCount += 1;
+
+            RenderText(g, score.ToString(), 1, Brushes.White, gameFontLarge);
+            if(gameState == GameStates.Normal) {
+                if(spriteState == SpriteStates.Waiting) {
+                    RenderText(g, "Sharp Flappy Bird", 3, Brushes.Goldenrod, gameFontLarge);
+                    RenderText(g, "C# implementation by", 9, Brushes.Gainsboro, gameFontSmall);
+                    RenderText(g, "Xavier Flix", 10, Brushes.Gainsboro, gameFontSmall);
+
+                    RenderText(g, "Press SPACEBAR to Start", 6, Brushes.YellowGreen, gameFontSmall);
+                }
+            } else {
+                RenderText(g, "Game Over", 4, Brushes.OrangeRed, gameFontLarge);
+                RenderText(g, "Press ENTER to Restart", 6, Brushes.YellowGreen, gameFontSmall);
+            }
+        }
+
+        private void RenderText(Graphics g, string text, int line, Brush color, Font font) {
+            using(GraphicsPath p = new GraphicsPath()) {
+                p.AddString(text,
+                            font.FontFamily, (int)FontStyle.Regular, g.DpiY * font.Size / 72.0f,
+                            new Rectangle(0, gameFontLarge.Height * line, (int)(backgroundImage.Width * Scale), font.Height),
+                            sf);
+                g.DrawPath(new Pen(Brushes.Black, 6), p);
+                g.FillPath(color, p);
+            }
         }
 
         private void RenderSprite(Graphics g) {
@@ -224,24 +281,31 @@ namespace SharpFlappyBird {
         private void RenderPipes(Graphics g) {
             double gap = 1.0 - 0.25; // 25% gap
             int xOffset;
+            double hole;
             int h = pipeImage.Height - groundImage.Height;
             double factor = h * gap;
             double topOffset = h * (1.0 - gap);
 
-            foreach((int FrameCount, double GapPosition) pipe in pipes) {
+            foreach(Pipe pipe in pipes) {
                 xOffset = frameCount * horizontalSpeed;
                 if(xOffset >= pipe.FrameCount) {
                     xOffset = backgroundImage.Width - (xOffset - pipe.FrameCount);
+                    hole = pipe.GapPosition * factor;
 
                     // Bottom Pipe
                     g.DrawImageUnscaled(pipeImage, xOffset,
-                        (int)(bgImgHeight - pipe.GapPosition * factor));
-                    collisionRects.Add(new Rectangle(xOffset, (int)(bgImgHeight - pipe.GapPosition * factor), pipeImage.Width, pipeImage.Height));
+                        (int)(bgImgHeight - hole));
+                    collisionRects.Add(new Rectangle(xOffset, (int)(bgImgHeight - hole), pipeImage.Width, pipeImage.Height));
 
                     // Top Pipe
                     g.DrawImageUnscaled(pipeInvertedImage, xOffset,
-                        (int)(-factor * pipe.GapPosition - topOffset));
-                    collisionRects.Add(new Rectangle(xOffset, (int)(-factor * pipe.GapPosition - topOffset), pipeImage.Width, pipeImage.Height));
+                        (int)(-hole - topOffset));
+                    collisionRects.Add(new Rectangle(xOffset, (int)(-hole - topOffset), pipeImage.Width, pipeImage.Height));
+
+                    if(!pipe.Passed && base.X1 >= xOffset) {
+                        pipe.Passed = true;
+                        score += 1;
+                    }
                 } else
                     break;
             }
@@ -272,9 +336,8 @@ namespace SharpFlappyBird {
 
             var r = new Random();
             for(int i = 1; i <= 10; i++) {
-                pipes.Add((FrameCount: 600 * i,
-                           GapPosition: r.Next(2, 8) / 10.0));
-            }
+                pipes.Add(new Pipe(600 * i, r.Next(2, 8) / 10.0, false));
         }
     }
+}
 }

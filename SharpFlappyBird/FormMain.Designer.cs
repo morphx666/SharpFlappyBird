@@ -35,7 +35,7 @@
             this.Margin = new System.Windows.Forms.Padding(3, 4, 3, 4);
             this.MaximizeBox = false;
             this.Name = "FormMain";
-            this.Text = "SharpFlappyBird";
+            this.Text = "Sharp Flappy Bird";
             this.ResumeLayout(false);
 
         }
