@@ -357,7 +357,7 @@ namespace SharpFlappyBird {
 
         private void SetupBASS() {
             string platform = Runtime.Platform.ToString().ToLower();
-            string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.Mac ? "x64" : "x86";
+            string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.MacOSX ? "x64" : "x86";
 
             if(platform.StartsWith("arm")) {
                 architecture = platform.EndsWith("hard") ? "hardfp" : "softfp";

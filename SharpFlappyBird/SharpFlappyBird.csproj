@@ -89,7 +89,7 @@
     <None Include="Bass\linux\x86\libbass.so">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="Bass\macos\x64\libbass.dylib">
+    <None Include="Bass\macosx\x64\libbass.dylib">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="packages.config" />

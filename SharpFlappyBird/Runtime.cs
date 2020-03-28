@@ -11,7 +11,7 @@ namespace SharpFlappyBird {
         public enum Platforms {
             Windows,
             Linux,
-            Mac,
+            MacOSX,
             ARMSoft,
             ARMHard,
             Unknown
@@ -36,14 +36,14 @@ namespace SharpFlappyBird {
                     mPlatform = Platforms.Windows;
                     break;
                 case PlatformID.MacOSX:
-                    mPlatform = Platforms.Mac;
+                    mPlatform = Platforms.MacOSX;
                     break;
                 default:
                     if(Directory.Exists("/Applications") &&
                        Directory.Exists("/System") &&
                        Directory.Exists("/Users") &&
                        Directory.Exists("/Volumes")) {
-                        mPlatform = Platforms.Mac;
+                        mPlatform = Platforms.MacOSX;
                     } else {
                         mPlatform = Platforms.Linux;
 
