@@ -1,2 +1,2 @@
 ﻿Image assets taken from https://flappybird.io/
-Font asset taken from https://github.com/deano2390/OpenFlappyBird
+Font and Sound assets taken from https://github.com/deano2390/OpenFlappyBird

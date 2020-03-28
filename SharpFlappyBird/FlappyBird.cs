@@ -3,9 +3,11 @@ using System.Collections.Concurrent;
 using System.Collections.Generic;
 using System.Drawing;
 using System.Drawing.Drawing2D;
+using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Windows.Forms;
+using ManagedBass;
 using RayCasting;
 
 namespace SharpFlappyBird {
@@ -61,22 +63,29 @@ namespace SharpFlappyBird {
 
         private readonly Font gameFontLarge;
         private readonly Font gameFontSmall;
-        private readonly StringFormat sf;
+        private readonly StringFormat gameFontFormat;
+
+        private readonly int sndHndJump;
+        private readonly int sndHndScore;
+        private readonly int sndHndGameOver;
 
         private double birdOsc = 0;
         private int frameCount = 0;
         private readonly List<Pipe> pipes = new List<Pipe>();
         private readonly ConcurrentBag<Rectangle> collisionRects = new ConcurrentBag<Rectangle>();
 
-        private bool isMonoRT = Type.GetType("System.MonoType") != null;
-        MethodInvoker paintSurface;
+        private readonly bool isMonoRT = Type.GetType("System.MonoType") != null;
+        private readonly MethodInvoker paintSurface;
 
         public FlappyBird(Control surface,
                           Image birdImage,
                           Image backgroundImage,
                           Image groundImage,
                           Image pipeImage,
-                          FontFamily gameFontFamily) : base(0, 0, 50, 0) {
+                          FontFamily gameFontFamily,
+                          string jumpSound,
+                          string scoreSound,
+                          string gameOverSound) : base(0, 0, 50, 0) {
             this.surface = surface;
             paintSurface = new MethodInvoker(() => surface.Invalidate());
 
@@ -88,8 +97,7 @@ namespace SharpFlappyBird {
 
             this.gameFontLarge = new Font(gameFontFamily, 30, FontStyle.Regular);
             this.gameFontSmall = new Font(gameFontFamily, 18, FontStyle.Regular);
-            sf = new StringFormat();
-            sf.Alignment = StringAlignment.Center;
+            gameFontFormat = new StringFormat { Alignment = StringAlignment.Center };
 
             sprite = birdImage;
             spriteRect = new RectangleF(0, 0, sprite.Width / 3, sprite.Height);
@@ -101,6 +109,28 @@ namespace SharpFlappyBird {
             ResetGame();
             InitGame();
             RunGameLogic();
+
+            SetupBASS();
+
+            sndHndJump = Bass.CreateStream(jumpSound);
+            sndHndScore = Bass.CreateStream(scoreSound);
+            sndHndGameOver = Bass.CreateStream(gameOverSound);
+        }
+
+        private void SetupBASS() {
+            string platform = Runtime.Platform.ToString().ToLower();
+            string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.Mac ? "x64" : "x86";
+
+            if(platform.StartsWith("arm")) {
+                architecture = platform.EndsWith("hard") ? "hardfp" : "softfp";
+                platform = "arm";
+            }
+
+            string path = Path.GetFullPath(Path.Combine("Bass", platform, architecture));
+            FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
+            File.Copy(lib.FullName, Path.GetFullPath(Path.Combine(lib.Name)), true);
+
+            Bass.Init();
         }
 
         public Vector Acceleration { get; set; }
@@ -114,6 +144,8 @@ namespace SharpFlappyBird {
             }
             Acceleration = new Vector(8, 270, Origin);
             Velocity.Magnitude = 0;
+
+            Bass.ChannelPlay(sndHndJump, true);
         }
 
         private void InitGame() {
@@ -139,7 +171,7 @@ namespace SharpFlappyBird {
             pipes.Clear();
             while(!collisionRects.IsEmpty) collisionRects.TryTake(out _);
             spriteAngle = 0;
-            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.53 - spriteH2);
+            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.60 - spriteH2);
 
             spriteState = SpriteStates.Waiting;
             gameState = GameStates.Normal;
@@ -234,7 +266,7 @@ namespace SharpFlappyBird {
                 p.AddString(text,
                             font.FontFamily, (int)FontStyle.Regular, g.DpiY * font.Size / 72.0f,
                             new Rectangle(0, gameFontLarge.Height * line, (int)(backgroundImage.Width * Scale), font.Height),
-                            sf);
+                            gameFontFormat);
                 g.DrawPath(new Pen(Brushes.Black, 6), p);
                 g.FillPath(color, p);
             }
@@ -305,6 +337,7 @@ namespace SharpFlappyBird {
                     if(!pipe.Passed && base.X1 >= xOffset) {
                         pipe.Passed = true;
                         score += 1;
+                        Bass.ChannelPlay(sndHndScore, true);
                     }
                 } else
                     break;
@@ -315,6 +348,7 @@ namespace SharpFlappyBird {
             // Collision with floor
             if(base.Y1 + spriteRect.Width >= bgImgHeight) {
                 gameState = GameStates.GameOver;
+                Bass.ChannelPlay(sndHndGameOver, true);
                 return true;
             }
 
@@ -337,7 +371,7 @@ namespace SharpFlappyBird {
             var r = new Random();
             for(int i = 1; i <= 10; i++) {
                 pipes.Add(new Pipe(600 * i, r.Next(2, 8) / 10.0, false));
+            }
         }
     }
-}
 }
