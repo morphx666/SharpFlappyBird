@@ -68,6 +68,7 @@ namespace SharpFlappyBird {
         private readonly int sndHndJump;
         private readonly int sndHndScore;
         private readonly int sndHndGameOver;
+        private readonly int sndHndBackgroundMusic;
 
         private double birdOsc = 0;
         private int frameCount = 0;
@@ -85,7 +86,8 @@ namespace SharpFlappyBird {
                           FontFamily gameFontFamily,
                           string jumpSound,
                           string scoreSound,
-                          string gameOverSound) : base(0, 0, 50, 0) {
+                          string gameOverSound,
+                          string backgroundMusic) : base(0, 0, 50, 0) {
             this.surface = surface;
             paintSurface = new MethodInvoker(() => surface.Invalidate());
 
@@ -115,6 +117,11 @@ namespace SharpFlappyBird {
             sndHndJump = Bass.CreateStream(jumpSound);
             sndHndScore = Bass.CreateStream(scoreSound);
             sndHndGameOver = Bass.CreateStream(gameOverSound);
+            sndHndBackgroundMusic = Bass.CreateStream(backgroundMusic);
+
+            int s = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
+            int h = Bass.SampleGetChannel(s);
+            Bass.ChannelPlay(h);
         }
 
         private void Up() {
