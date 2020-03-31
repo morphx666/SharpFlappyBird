@@ -32,15 +32,16 @@ namespace SharpFlappyBird {
                                   GetAsset("sounds", "gameover.ogg"),
                                   GetAsset("sounds", "song.ogg"));
 
-            // Resize client area
-            this.ClientSize = new Size((int)(bImg.Width * bird.Scale),
-                                       (int)((bImg.Height + gImg.Height) * bird.Scale));
+            this.Shown += (_, __) => {
+                // Resize client area
+                this.ClientSize = new Size((int)(bImg.Width * bird.Scale),
+                                           (int)((bImg.Height + gImg.Height) * bird.Scale));
 
-            // Center screen
-            Rectangle sb = Screen.FromControl(this).WorkingArea;
-            MessageBox.Show(Screen.FromControl(this).WorkingArea.ToString());
-            this.Location = new Point((sb.Width - this.Width) / 2,
-                                      (sb.Height - (this.Height + SystemInformation.CaptionHeight)) / 2);
+                // Center screen
+                Rectangle sb = Screen.FromControl(this).WorkingArea;
+                this.Location = new Point((sb.Width - this.Width) / 2,
+                                          (sb.Height - (this.Height + SystemInformation.CaptionHeight)) / 2);
+            };
         }
 
         private static string GetAsset(string subFolder, string assetFileName) {
