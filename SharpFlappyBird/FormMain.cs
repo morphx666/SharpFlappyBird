@@ -32,6 +32,8 @@ namespace SharpFlappyBird {
                                   GetAsset("sounds", "gameover.ogg"),
                                   GetAsset("sounds", "song.ogg"));
 
+            bird.Exit += () => this.Close();
+
             this.Shown += (_, __) => {
                 // Resize client area
                 this.ClientSize = new Size((int)(bImg.Width * bird.Scale),

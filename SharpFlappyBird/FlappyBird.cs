@@ -78,6 +78,9 @@ namespace SharpFlappyBird {
         private readonly bool isMonoRT = Type.GetType("System.MonoType") != null;
         private readonly MethodInvoker paintSurface;
 
+        public delegate void OnExit();
+        public event OnExit Exit;
+
         public FlappyBird(Control surface,
                           Image birdImage,
                           Image backgroundImage,
@@ -145,6 +148,9 @@ namespace SharpFlappyBird {
                         break;
                     case Keys.Enter:
                         if(gameState == GameStates.GameOver) ResetGame();
+                        break;
+                    case Keys.Escape:
+                        Exit?.Invoke();
                         break;
                 }
             };
