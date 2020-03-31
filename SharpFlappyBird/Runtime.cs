@@ -20,7 +20,7 @@ namespace SharpFlappyBird {
         public static Platforms Platform {
             get {
                 if(mPlatform == null) DetectPlatform();
-                return mPlatform.HasValue ? mPlatform.Value : Platforms.Unknown;
+                return mPlatform ?? Platforms.Unknown;
             }
         }
 
@@ -46,10 +46,7 @@ namespace SharpFlappyBird {
                         mPlatform = Platforms.Linux;
 
                         string distro = GetLinuxDistro().ToLower();
-                        if(distro.Contains("raspberrypi")) {
-                            mPlatform = Platforms.ARMSoft;
-                            if(distro.Contains("armv7l")) mPlatform = Platforms.ARMHard;
-                        }
+                        if(distro.Contains("raspberrypi")) mPlatform = distro.Contains("armv7l") ? Platforms.ARMHard : Platforms.ARMSoft;
                     }
                     break;
             }
@@ -58,14 +55,16 @@ namespace SharpFlappyBird {
         private static string GetLinuxDistro() {
             List<string> lines = new List<string>();
 
-            Process catProcess = new Process();
-            catProcess.StartInfo.FileName = "uname";
-            catProcess.StartInfo.Arguments = "-a";
-            catProcess.StartInfo.CreateNoWindow = true;
-            catProcess.StartInfo.UseShellExecute = false;
-            catProcess.StartInfo.RedirectStandardOutput = true;
-            catProcess.StartInfo.RedirectStandardError = true;
-            catProcess.StartInfo.RedirectStandardInput = false;
+            ProcessStartInfo si = new ProcessStartInfo() {
+                FileName = "uname",
+                Arguments = "-a",
+                CreateNoWindow = true,
+                UseShellExecute = false,
+                RedirectStandardOutput = true,
+                RedirectStandardError = true,
+                RedirectStandardInput = false
+            };
+            Process catProcess = new Process { StartInfo = si };
             catProcess.OutputDataReceived += (object s, DataReceivedEventArgs e) => lines.Add(e.Data);
 
             try {
@@ -76,11 +75,7 @@ namespace SharpFlappyBird {
 
                 System.Threading.Thread.Sleep(500);
 
-                if(lines.Count > 0) {
-                    return lines.First();
-                } else {
-                    return "Unknown";
-                }
+                return lines.Count > 0 ? lines[0] : "Unknown";
             } catch {
                 return Environment.OSVersion.Platform.ToString();
             }

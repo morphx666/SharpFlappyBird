@@ -12,9 +12,8 @@ using RayCasting;
 
 namespace SharpFlappyBird {
     public class FlappyBird : Vector {
-        public float Scale = 0.65f;
-        private Vector velocity;
-        private Vector acceleration;
+        public float Scale = 1.0f;
+        public bool CanRun = true;
 
         private enum SpriteStates {
             Waiting = -1,
@@ -41,6 +40,9 @@ namespace SharpFlappyBird {
                 Passed = passed;
             }
         }
+
+        private Vector velocity;
+        private Vector acceleration;
 
         private readonly Image sprite;
         private int spriteIndex;
@@ -100,8 +102,8 @@ namespace SharpFlappyBird {
             this.pipeInvertedImage = (Image)pipeImage.Clone();
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
-            this.gameFontLarge = new Font(gameFontFamily, 30, FontStyle.Regular);
-            this.gameFontSmall = new Font(gameFontFamily, 18, FontStyle.Regular);
+            this.gameFontLarge = new Font(gameFontFamily, 50 * Scale, FontStyle.Regular);
+            this.gameFontSmall = new Font(gameFontFamily, 30 * Scale, FontStyle.Regular);
             gameFontFormat = new StringFormat { Alignment = StringAlignment.Center };
 
             sprite = birdImage;
@@ -111,19 +113,20 @@ namespace SharpFlappyBird {
 
             bgImgHeight = backgroundImage.Height;
 
+            SetupEventHandlers();
             ResetGame();
-            InitGame();
             RunGameLogic();
+
             if(!isMonoRT) {
-                SetupBASS();
+                if(CanRun = SetupBASS()) {
+                    sndHndJump = Bass.CreateStream(jumpSound);
+                    sndHndScore = Bass.CreateStream(scoreSound);
+                    sndHndGameOver = Bass.CreateStream(gameOverSound);
 
-                sndHndJump = Bass.CreateStream(jumpSound);
-                sndHndScore = Bass.CreateStream(scoreSound);
-                sndHndGameOver = Bass.CreateStream(gameOverSound);
-
-                sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
-                int h = Bass.SampleGetChannel(sndHndBackgroundMusic);
-                Bass.ChannelPlay(h);
+                    sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
+                    int h = Bass.SampleGetChannel(sndHndBackgroundMusic);
+                    Bass.ChannelPlay(h);
+                }
             }
         }
 
@@ -140,7 +143,7 @@ namespace SharpFlappyBird {
             if(!isMonoRT) Bass.ChannelPlay(sndHndJump, true);
         }
 
-        private void InitGame() {
+        private void SetupEventHandlers() {
             surface.KeyDown += (object s, KeyEventArgs e) => {
                 switch(e.KeyCode) {
                     case Keys.Space:
@@ -154,6 +157,18 @@ namespace SharpFlappyBird {
                         break;
                 }
             };
+
+            surface.MouseDown += (object s, MouseEventArgs e) => {
+                switch(e.Button) {
+                    case MouseButtons.Left:
+                        Up();
+                        break;
+                    case MouseButtons.Right:
+                        if(gameState == GameStates.GameOver) ResetGame();
+                        break;
+                }
+
+            };
         }
 
         private void ResetGame() {
@@ -166,7 +181,7 @@ namespace SharpFlappyBird {
             pipes.Clear();
             while(!pipesRects.IsEmpty) pipesRects.TryTake(out _);
             spriteAngle = 0;
-            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.53 - spriteH2);
+            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.54 - spriteH2 * (1 - Scale));
 
             spriteState = SpriteStates.Waiting;
             gameState = GameStates.Normal;
@@ -369,7 +384,7 @@ namespace SharpFlappyBird {
             }
         }
 
-        private void SetupBASS() {
+        private bool SetupBASS() {
             string platform = Runtime.Platform.ToString().ToLower();
             string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.MacOSX ? "x64" : "x86";
 
@@ -386,12 +401,17 @@ namespace SharpFlappyBird {
             Console.WriteLine($"Bass Library: {lib.Name} ({platform} {architecture})");
 #endif
 
+            bool result;
             try {
-                if(!Bass.Init()) Environment.Exit(1);
+                result = Bass.Init();
             } catch(DllNotFoundException) {
                 Application.Restart();
-                Environment.Exit(0);
+                result = false;
+            } finally {
+                result = true;
             }
+
+            return result;
         }
     }
 }

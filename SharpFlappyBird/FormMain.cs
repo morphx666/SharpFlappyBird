@@ -44,6 +44,8 @@ namespace SharpFlappyBird {
                 this.Location = new Point((sb.Width - this.Width) / 2,
                                           (sb.Height - (this.Height + SystemInformation.CaptionHeight)) / 2);
             };
+
+            if(!bird.CanRun) Application.Exit();
         }
 
         private static string GetAsset(string subFolder, string assetFileName) {
