@@ -12,7 +12,7 @@ using RayCasting;
 
 namespace SharpFlappyBird {
     public class FlappyBird : Vector {
-        public float Scale = 1.0f;
+        private float mScale = 1.0f;
         public bool CanRun = true;
 
         private enum SpriteStates {
@@ -63,8 +63,8 @@ namespace SharpFlappyBird {
         private readonly Image pipeInvertedImage;
         private readonly int bgImgHeight;
 
-        private readonly Font gameFontLarge;
-        private readonly Font gameFontSmall;
+        private Font gameFontLarge;
+        private Font gameFontSmall;
         private readonly StringFormat gameFontFormat;
 
         private readonly int sndHndJump;
@@ -102,8 +102,8 @@ namespace SharpFlappyBird {
             this.pipeInvertedImage = (Image)pipeImage.Clone();
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
-            this.gameFontLarge = new Font(gameFontFamily, 50 * Scale, FontStyle.Regular);
-            this.gameFontSmall = new Font(gameFontFamily, 30 * Scale, FontStyle.Regular);
+            this.gameFontLarge = new Font(gameFontFamily, 50 * mScale, FontStyle.Regular);
+            this.gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
             gameFontFormat = new StringFormat { Alignment = StringAlignment.Center };
 
             sprite = birdImage;
@@ -127,6 +127,17 @@ namespace SharpFlappyBird {
                     int h = Bass.SampleGetChannel(sndHndBackgroundMusic);
                     Bass.ChannelPlay(h);
                 }
+            }
+        }
+
+        public float Scale {
+            get => mScale;
+            set {
+                this.gameFontLarge.Dispose();
+                this.gameFontLarge = new Font(this.gameFontLarge.FontFamily, 50 / mScale * value, FontStyle.Regular);
+                this.gameFontSmall.Dispose();
+                this.gameFontSmall = new Font(this.gameFontSmall.FontFamily, 30 / mScale * value, FontStyle.Regular);
+                mScale = value;
             }
         }
 
@@ -181,7 +192,7 @@ namespace SharpFlappyBird {
             pipes.Clear();
             while(!pipesRects.IsEmpty) pipesRects.TryTake(out _);
             spriteAngle = 0;
-            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.54 - spriteH2 * (1 - Scale));
+            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.54 - spriteH2 * (1 - mScale));
 
             spriteState = SpriteStates.Waiting;
             gameState = GameStates.Normal;
@@ -243,7 +254,7 @@ namespace SharpFlappyBird {
 
             g.InterpolationMode = InterpolationMode.NearestNeighbor;
 
-            g.ScaleTransform(Scale, Scale);
+            g.ScaleTransform(mScale, mScale);
 
             if(!isMonoRT) g.CompositingMode = CompositingMode.SourceCopy;
             g.DrawImageUnscaled(backgroundImage, 0, 0);
@@ -276,7 +287,7 @@ namespace SharpFlappyBird {
             using(GraphicsPath p = new GraphicsPath()) {
                 p.AddString(text,
                             font.FontFamily, (int)FontStyle.Regular, g.DpiY * font.Size / 72.0f,
-                            new Rectangle(0, gameFontLarge.Height * line, (int)(backgroundImage.Width * Scale), font.Height),
+                            new Rectangle(0, gameFontLarge.Height * line, (int)(backgroundImage.Width * mScale), font.Height),
                             gameFontFormat);
                 g.DrawPath(new Pen(Brushes.Black, 6), p);
                 g.FillPath(color, p);
