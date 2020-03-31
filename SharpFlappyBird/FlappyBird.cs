@@ -73,7 +73,7 @@ namespace SharpFlappyBird {
         private double birdOsc = 0;
         private int frameCount = 0;
         private readonly List<Pipe> pipes = new List<Pipe>();
-        private readonly ConcurrentBag<Rectangle> collisionRects = new ConcurrentBag<Rectangle>();
+        private readonly ConcurrentBag<Rectangle> pipesRects = new ConcurrentBag<Rectangle>();
 
         private readonly bool isMonoRT = Type.GetType("System.MonoType") != null;
         private readonly MethodInvoker paintSurface;
@@ -111,17 +111,17 @@ namespace SharpFlappyBird {
             ResetGame();
             InitGame();
             RunGameLogic();
+            if(!isMonoRT) {
+                SetupBASS();
 
-            SetupBASS();
+                sndHndJump = Bass.CreateStream(jumpSound);
+                sndHndScore = Bass.CreateStream(scoreSound);
+                sndHndGameOver = Bass.CreateStream(gameOverSound);
 
-            sndHndJump = Bass.CreateStream(jumpSound);
-            sndHndScore = Bass.CreateStream(scoreSound);
-            sndHndGameOver = Bass.CreateStream(gameOverSound);
-            sndHndBackgroundMusic = Bass.CreateStream(backgroundMusic);
-
-            int s = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
-            int h = Bass.SampleGetChannel(s);
-            Bass.ChannelPlay(h);
+                sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
+                int h = Bass.SampleGetChannel(sndHndBackgroundMusic);
+                Bass.ChannelPlay(h);
+            }
         }
 
         private void Up() {
@@ -134,7 +134,7 @@ namespace SharpFlappyBird {
             acceleration = new Vector(8, 270, Origin);
             velocity.Magnitude = 0;
 
-            Bass.ChannelPlay(sndHndJump, true);
+            if(!isMonoRT) Bass.ChannelPlay(sndHndJump, true);
         }
 
         private void InitGame() {
@@ -158,9 +158,9 @@ namespace SharpFlappyBird {
             score = 0;
             SetSpriteRect(true);
             pipes.Clear();
-            while(!collisionRects.IsEmpty) collisionRects.TryTake(out _);
+            while(!pipesRects.IsEmpty) pipesRects.TryTake(out _);
             spriteAngle = 0;
-            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.60 - spriteH2);
+            base.TranslateAbs(backgroundImage.Width * 0.4, bgImgHeight * 0.53 - spriteH2);
 
             spriteState = SpriteStates.Waiting;
             gameState = GameStates.Normal;
@@ -199,8 +199,9 @@ namespace SharpFlappyBird {
                         } else {
                             if(fallDelay++ >= 20)
                                 spriteState = SpriteStates.Falling;
-                            else // This looks nice, but it's not how the original game behaves
+                            /* else // This looks nice, but it's not how the original game behaves
                                 ;//spriteState = SpriteStates.Down;
+                            */
                         }
                     }
 
@@ -316,17 +317,17 @@ namespace SharpFlappyBird {
                     // Bottom Pipe
                     g.DrawImageUnscaled(pipeImage, xOffset,
                         (int)(bgImgHeight - hole));
-                    collisionRects.Add(new Rectangle(xOffset, (int)(bgImgHeight - hole), pipeImage.Width, pipeImage.Height));
+                    pipesRects.Add(new Rectangle(xOffset, (int)(bgImgHeight - hole), pipeImage.Width, pipeImage.Height));
 
                     // Top Pipe
                     g.DrawImageUnscaled(pipeInvertedImage, xOffset,
                         (int)(-hole - topOffset));
-                    collisionRects.Add(new Rectangle(xOffset, (int)(-hole - topOffset), pipeImage.Width, pipeImage.Height));
+                    pipesRects.Add(new Rectangle(xOffset, (int)(-hole - topOffset), pipeImage.Width, pipeImage.Height));
 
                     if(!pipe.Passed && base.X1 >= xOffset) {
                         pipe.Passed = true;
                         score += 1;
-                        Bass.ChannelPlay(sndHndScore, true);
+                        if(!isMonoRT) Bass.ChannelPlay(sndHndScore, true);
                     }
                 } else
                     break;
@@ -336,7 +337,7 @@ namespace SharpFlappyBird {
         private bool CheckCollision() {
             if(base.Y1 + spriteRect.Width >= bgImgHeight) { // Collision with floor
                 gameState = GameStates.GameOver;
-                Bass.ChannelPlay(sndHndGameOver, true);
+                if(!isMonoRT) Bass.ChannelPlay(sndHndGameOver, true);
                 return true;
             }
 
@@ -344,8 +345,8 @@ namespace SharpFlappyBird {
                                          (int)base.Y1,
                                          (int)spriteRect.Width,
                                          (int)spriteRect.Height);
-            while(collisionRects.TryTake(out Rectangle cr)) {
-                if(cr.IntersectsWith(sr)) {
+            while(pipesRects.TryTake(out Rectangle cr)) {
+                if(cr.IntersectsWith(sr)) { // Collision with pipe
                     gameState = GameStates.Crashed;
                     return true;
                 }
@@ -375,7 +376,16 @@ namespace SharpFlappyBird {
             FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
             File.Copy(lib.FullName, Path.GetFullPath(Path.Combine(lib.Name)), true);
 
-            Bass.Init();
+#if DEBUG
+            Console.WriteLine($"Bass Library: {lib.Name} ({platform} {architecture})");
+#endif
+
+            try {
+                if(!Bass.Init()) Environment.Exit(1);
+            } catch(DllNotFoundException) {
+                Application.Restart();
+                Environment.Exit(0);
+            }
         }
     }
 }

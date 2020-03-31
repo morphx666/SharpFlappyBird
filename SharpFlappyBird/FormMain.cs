@@ -38,6 +38,7 @@ namespace SharpFlappyBird {
 
             // Center screen
             Rectangle sb = Screen.FromControl(this).WorkingArea;
+            MessageBox.Show(Screen.FromControl(this).WorkingArea.ToString());
             this.Location = new Point((sb.Width - this.Width) / 2,
                                       (sb.Height - (this.Height + SystemInformation.CaptionHeight)) / 2);
         }
