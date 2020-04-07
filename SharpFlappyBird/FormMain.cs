@@ -34,11 +34,9 @@ namespace SharpFlappyBird {
 
             bird.Exit += () => this.Close();
 
-            this.FormBorderStyle = FormBorderStyle.Sizable;
-
             this.Shown += (_, __) => {
                 Rectangle sb = Screen.FromControl(this).WorkingArea;
-                while((int)((bImg.Height + gImg.Height) * bird.Scale) > sb.Height) bird.Scale -= 0.1f;
+                while((int)((bImg.Height + gImg.Height) * bird.Scale) > sb.Height - SystemInformation.CaptionHeight) bird.Scale -= 0.05f;
 
                 // Resize client area
                 this.ClientSize = new Size((int)(bImg.Width * bird.Scale),
@@ -46,7 +44,7 @@ namespace SharpFlappyBird {
 
                 // Center screen
                 this.Location = new Point((sb.Width - this.Width) / 2,
-                                          (sb.Height - (this.Height + SystemInformation.CaptionHeight)) / 2);
+                                          (sb.Height - this.Height) / 2);
             };
 
             if(!bird.CanRun) Application.Exit();

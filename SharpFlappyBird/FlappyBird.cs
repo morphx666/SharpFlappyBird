@@ -63,6 +63,7 @@ namespace SharpFlappyBird {
         private readonly Image pipeInvertedImage;
         private readonly int bgImgHeight;
 
+        private FontFamily gameFontFamily;
         private Font gameFontLarge;
         private Font gameFontSmall;
         private readonly StringFormat gameFontFormat;
@@ -102,9 +103,9 @@ namespace SharpFlappyBird {
             this.pipeInvertedImage = (Image)pipeImage.Clone();
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
 
-            this.gameFontLarge = new Font(gameFontFamily, 50 * mScale, FontStyle.Regular);
-            this.gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
+            this.gameFontFamily = gameFontFamily;
             gameFontFormat = new StringFormat { Alignment = StringAlignment.Center };
+            Scale = mScale;
 
             sprite = birdImage;
             spriteRect = new RectangleF(0, 0, sprite.Width / 3, sprite.Height);
@@ -133,11 +134,12 @@ namespace SharpFlappyBird {
         public float Scale {
             get => mScale;
             set {
-                this.gameFontLarge.Dispose();
-                this.gameFontLarge = new Font(this.gameFontLarge.FontFamily, 50 / mScale * value, FontStyle.Regular);
-                this.gameFontSmall.Dispose();
-                this.gameFontSmall = new Font(this.gameFontSmall.FontFamily, 30 / mScale * value, FontStyle.Regular);
                 mScale = value;
+
+                gameFontLarge?.Dispose();
+                gameFontLarge = new Font(gameFontFamily, 50 * mScale, FontStyle.Regular);
+                gameFontSmall?.Dispose();
+                gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
             }
         }
 
