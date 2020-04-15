@@ -1,0 +1,17 @@
+﻿{
+	"$type": "Form",
+	"Title": "Sharp Flappy Bird (Eto)",
+	"ClientSize": "400, 350",
+	"Padding": "0",
+	"Content": {
+		"$type": "DynamicLayout",
+		"Rows": [
+			{
+				"$type": "Drawable",
+				"$name": "Canvas",
+				"CanFocus": "true",
+				"BackgroundColor": "Black"
+			}
+		]
+	}
+}

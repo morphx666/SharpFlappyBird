@@ -3,9 +3,30 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29911.84
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFlappyBird", "SharpFlappyBird\SharpFlappyBird.csproj", "{14A8D749-7532-4B4F-8CE5-62BE6E01B436}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFlappyBird(WinForms)", "SharpFlappyBird(WinForms)\SharpFlappyBird(WinForms).csproj", "{14A8D749-7532-4B4F-8CE5-62BE6E01B436}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "WinForms", "WinForms", "{C8D41D3C-9139-4E85-B481-88309210DD25}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Eto", "Eto", "{C27C56EE-14C8-40B6-B3A8-67424B538B1C}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Platforms", "Platforms", "{8218E0B5-69FE-4C28-9195-1FAE8AD6D668}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFlappyBird(Eto)", "SharpFlappyBird(Eto)\SharpFlappyBird\SharpFlappyBird(Eto).csproj", "{E1ADDF71-ADEE-41D2-B270-C25A37C2B0EA}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFlappyBird.Gtk", "SharpFlappyBird(Eto)\SharpFlappyBird.Gtk\SharpFlappyBird.Gtk.csproj", "{1CB3420A-7945-4F38-9467-EED6AFA67F38}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFlappyBird.Mac", "SharpFlappyBird(Eto)\SharpFlappyBird.Mac\SharpFlappyBird.Mac.csproj", "{7EDFEA16-D49C-4EAD-85D4-2A006BD1DF50}"
+EndProject
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFlappyBird.Wpf", "SharpFlappyBird(Eto)\SharpFlappyBird.Wpf\SharpFlappyBird.Wpf.csproj", "{A3F96ED0-DD0B-4897-ACE3-434107D48070}"
+EndProject
+Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "FlappyBirdEngine", "FlappyBirdEngine\FlappyBirdEngine.shproj", "{9F188DBC-D1D9-4436-A70E-5BCB4C752896}"
 EndProject
 Global
+	GlobalSection(SharedMSBuildProjectFiles) = preSolution
+		FlappyBirdEngine\FlappyBirdEngine.projitems*{14a8d749-7532-4b4f-8ce5-62be6e01b436}*SharedItemsImports = 4
+		FlappyBirdEngine\FlappyBirdEngine.projitems*{9f188dbc-d1d9-4436-a70e-5bcb4c752896}*SharedItemsImports = 13
+		FlappyBirdEngine\FlappyBirdEngine.projitems*{e1addf71-adee-41d2-b270-c25a37c2b0ea}*SharedItemsImports = 5
+	EndGlobalSection
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
 		Release|Any CPU = Release|Any CPU
@@ -15,9 +36,33 @@ Global
 		{14A8D749-7532-4B4F-8CE5-62BE6E01B436}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{14A8D749-7532-4B4F-8CE5-62BE6E01B436}.Release|Any CPU.ActiveCfg = Release|Any CPU
 		{14A8D749-7532-4B4F-8CE5-62BE6E01B436}.Release|Any CPU.Build.0 = Release|Any CPU
+		{E1ADDF71-ADEE-41D2-B270-C25A37C2B0EA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{E1ADDF71-ADEE-41D2-B270-C25A37C2B0EA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{E1ADDF71-ADEE-41D2-B270-C25A37C2B0EA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{E1ADDF71-ADEE-41D2-B270-C25A37C2B0EA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{1CB3420A-7945-4F38-9467-EED6AFA67F38}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{1CB3420A-7945-4F38-9467-EED6AFA67F38}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{1CB3420A-7945-4F38-9467-EED6AFA67F38}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{1CB3420A-7945-4F38-9467-EED6AFA67F38}.Release|Any CPU.Build.0 = Release|Any CPU
+		{7EDFEA16-D49C-4EAD-85D4-2A006BD1DF50}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{7EDFEA16-D49C-4EAD-85D4-2A006BD1DF50}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{7EDFEA16-D49C-4EAD-85D4-2A006BD1DF50}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{7EDFEA16-D49C-4EAD-85D4-2A006BD1DF50}.Release|Any CPU.Build.0 = Release|Any CPU
+		{A3F96ED0-DD0B-4897-ACE3-434107D48070}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{A3F96ED0-DD0B-4897-ACE3-434107D48070}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{A3F96ED0-DD0B-4897-ACE3-434107D48070}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{A3F96ED0-DD0B-4897-ACE3-434107D48070}.Release|Any CPU.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{14A8D749-7532-4B4F-8CE5-62BE6E01B436} = {C8D41D3C-9139-4E85-B481-88309210DD25}
+		{8218E0B5-69FE-4C28-9195-1FAE8AD6D668} = {C27C56EE-14C8-40B6-B3A8-67424B538B1C}
+		{E1ADDF71-ADEE-41D2-B270-C25A37C2B0EA} = {C27C56EE-14C8-40B6-B3A8-67424B538B1C}
+		{1CB3420A-7945-4F38-9467-EED6AFA67F38} = {8218E0B5-69FE-4C28-9195-1FAE8AD6D668}
+		{7EDFEA16-D49C-4EAD-85D4-2A006BD1DF50} = {8218E0B5-69FE-4C28-9195-1FAE8AD6D668}
+		{A3F96ED0-DD0B-4897-ACE3-434107D48070} = {8218E0B5-69FE-4C28-9195-1FAE8AD6D668}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {FB2E8EDA-AEC1-499D-84CC-CC069CCCD94D}
