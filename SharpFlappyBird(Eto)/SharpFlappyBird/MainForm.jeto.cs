@@ -13,6 +13,11 @@ namespace SharpFlappyBird {
         public MainForm() {
             JsonReader.Load(this);
 
+            MessageBox.Show("The Eto.Forms version does not currently support the following features:" +
+                            "\n" +
+                            "\n - Text Rendering" +
+                            "\n - Audio (Sound FX and background music)");
+
             Image bImg = new Bitmap(GetAsset("images", "background.png"));
             Image gImg = new Bitmap(GetAsset("images", "ground.png"));
 
