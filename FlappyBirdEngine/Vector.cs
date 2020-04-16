@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Diagnostics;
 #if WINFORMS
 using System.Drawing;
 #else

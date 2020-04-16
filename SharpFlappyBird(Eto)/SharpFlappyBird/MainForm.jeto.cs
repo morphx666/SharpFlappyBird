@@ -3,7 +3,6 @@ using Eto.Drawing;
 using Eto.Serialization.Json;
 using System.IO;
 using Eto;
-using SharpFlappyBird;
 
 namespace SharpFlappyBird {
     public class MainForm : Form {
@@ -26,7 +25,7 @@ namespace SharpFlappyBird {
                                   bImg,
                                   gImg,
                                   new Bitmap(GetAsset("images", "pipe.png")),
-                                  new FontFamily("flappy"),
+                                  null,
                                   GetAsset("sounds", "jump.ogg"),
                                   GetAsset("sounds", "score.ogg"),
                                   GetAsset("sounds", "gameover.ogg"),
