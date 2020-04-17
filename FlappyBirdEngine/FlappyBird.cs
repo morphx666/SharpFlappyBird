@@ -170,10 +170,11 @@ namespace SharpFlappyBird {
                 gameFontSmall?.Dispose();
                 gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
 #else
+                // FIXME: Why do we need the 1.6 factor?
                 gameFontLarge?.Dispose();
-                gameFontLarge = new Font(gameFontFamily.Name, 50 * mScale);
+                gameFontLarge = new Font(gameFontFamily.Name, 1.6f * 50 * mScale);
                 gameFontSmall?.Dispose();
-                gameFontSmall = new Font(gameFontFamily.Name, 30 * mScale);
+                gameFontSmall = new Font(gameFontFamily.Name, 1.6f * 30 * mScale);
 #endif
             }
         }
@@ -327,7 +328,7 @@ namespace SharpFlappyBird {
             if(gameState == GameStates.Normal) frameCount += 1;
 #endif
 
-            RenderText(g, score.ToString(), 1, Brushes.White, gameFontLarge);
+            RenderText(g, score.ToString(), 1, Brushes.WhiteSmoke, gameFontLarge);
             if(gameState == GameStates.Normal) {
                 if(spriteState == SpriteStates.Waiting) {
                     RenderText(g, "Sharp Flappy Bird", 3, Brushes.Goldenrod, gameFontLarge);
@@ -353,12 +354,22 @@ namespace SharpFlappyBird {
                 g.FillPath(color, p);
             }
 #else
-            // Questions about the DrawText RectangleF:
+            // FIXME: Since Eto doesn't support GraphicsPath.AddString,
+            // add a semi-transparent background to give the text some contrast 
+            SizeF s = g.MeasureString(font, text);
+            float lh = 1.3f * gameFontLarge.LineHeight * line;
+            g.FillRectangle(Color.FromArgb(32, 32, 32, 128), new RectangleF(
+                            (backgroundImage.Width - s.Width) / 2.0f,
+                            lh,
+                            s.Width,
+                            s.Height));
+
+            // FIXME: Questions about the DrawText RectangleF:
             // 1) Why the width doesn't need to be scaled?
-            // 2) Why the height needs to be scaled according to the line number?
+            // 2) Why the height needs to be so... large?
             g.DrawText(font, color,
-                        new RectangleF(0, gameFontLarge.LineHeight * line,
-                                       backgroundImage.Width, font.LineHeight * line),
+                        new RectangleF(0, lh,
+                                       backgroundImage.Width, backgroundImage.Height),
                         text,
                         FormattedTextWrapMode.None,
                         FormattedTextAlignment.Center,
