@@ -3,6 +3,8 @@
 	"Title": "Sharp Flappy Bird (Eto)",
 	"ClientSize": "400, 350",
 	"Padding": "0",
+	"Resizable": "false",
+	"Maximizable": "false",
 	"Content": {
 		"$type": "DynamicLayout",
 		"Rows": [
