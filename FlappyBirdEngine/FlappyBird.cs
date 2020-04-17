@@ -5,7 +5,6 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using System.Drawing;
-using ManagedBass;
 #else
 using Eto.Drawing;
 using Eto.Forms;
@@ -14,6 +13,7 @@ using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
 using RayCasting;
+using ManagedBass;
 
 namespace SharpFlappyBird {
     public class FlappyBird : Vector {
@@ -74,20 +74,20 @@ namespace SharpFlappyBird {
         private Font gameFontSmall;
 #if WINFORMS
         private readonly StringFormat gameFontFormat;
+#endif
 
         private readonly int sndHndJump;
         private readonly int sndHndScore;
         private readonly int sndHndGameOver;
         private readonly int sndHndBackgroundMusic;
-#endif
 
         private double birdOsc = 0;
         private int frameCount = 0;
         private readonly List<Pipe> pipes = new List<Pipe>();
         private readonly ConcurrentBag<Rectangle> pipesRects = new ConcurrentBag<Rectangle>();
 
+        private readonly bool isMonoRT = false;// Type.GetType("System.MonoType") != null;
 #if WINFORMS
-        private readonly bool isMonoRT = Type.GetType("System.MonoType") != null;
         private readonly MethodInvoker paintSurface;
 #endif
 
@@ -146,7 +146,6 @@ namespace SharpFlappyBird {
             ResetGame();
             RunGameLogic();
 
-#if WINFORMS
             if(!isMonoRT) {
                 if(CanRun = SetupBASS()) {
                     sndHndJump = Bass.CreateStream(jumpSound);
@@ -158,7 +157,6 @@ namespace SharpFlappyBird {
                     Bass.ChannelPlay(h);
                 }
             }
-#endif
         }
 
         public float Scale {
@@ -171,6 +169,11 @@ namespace SharpFlappyBird {
                 gameFontLarge = new Font(gameFontFamily, 50 * mScale, FontStyle.Regular);
                 gameFontSmall?.Dispose();
                 gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
+#else
+                gameFontLarge?.Dispose();
+                gameFontLarge = new Font(gameFontFamily.Name, 50 * mScale);
+                gameFontSmall?.Dispose();
+                gameFontSmall = new Font(gameFontFamily.Name, 30 * mScale);
 #endif
             }
         }
@@ -185,9 +188,7 @@ namespace SharpFlappyBird {
             acceleration = new Vector(8, PI270, Origin);
             velocity.Magnitude = 0;
 
-#if WINFORMS
             if(!isMonoRT) Bass.ChannelPlay(sndHndJump, true);
-#endif
         }
 
         private void SetupEventHandlers() {
@@ -281,7 +282,7 @@ namespace SharpFlappyBird {
 #if WINFORMS
                     if(surface.IsHandleCreated) surface.BeginInvoke(paintSurface);
 #else
-                    Application.Instance.Invoke(() => surface .Invalidate());
+                    Application.Instance.Invoke(() => surface.Invalidate());
 #endif
                 }
             });
@@ -317,6 +318,14 @@ namespace SharpFlappyBird {
             RenderSprite(g);
 
             if(gameState == GameStates.Normal) frameCount += 1;
+#else
+            g.DrawImage(backgroundImage, 0, 0);
+            RenderPipes(g);
+            RenderGround(g);
+            RenderSprite(g);
+
+            if(gameState == GameStates.Normal) frameCount += 1;
+#endif
 
             RenderText(g, score.ToString(), 1, Brushes.White, gameFontLarge);
             if(gameState == GameStates.Normal) {
@@ -331,14 +340,6 @@ namespace SharpFlappyBird {
                 RenderText(g, "Game Over", 4, Brushes.OrangeRed, gameFontLarge);
                 RenderText(g, "Press ENTER to Restart", 6, Brushes.YellowGreen, gameFontSmall);
             }
-#else
-            g.DrawImage(backgroundImage, 0, 0);
-            RenderPipes(g);
-            RenderGround(g);
-            RenderSprite(g);
-
-            if(gameState == GameStates.Normal) frameCount += 1;
-#endif
         }
 
         private void RenderText(Graphics g, string text, int line, Brush color, Font font) {
@@ -351,6 +352,17 @@ namespace SharpFlappyBird {
                 g.DrawPath(new Pen(Brushes.Black, 6), p);
                 g.FillPath(color, p);
             }
+#else
+            // Questions about the DrawText RectangleF:
+            // 1) Why the width doesn't need to be scaled?
+            // 2) Why the height needs to be scaled according to the line number?
+            g.DrawText(font, color,
+                        new RectangleF(0, gameFontLarge.LineHeight * line,
+                                       backgroundImage.Width, font.LineHeight * line),
+                        text,
+                        FormattedTextWrapMode.None,
+                        FormattedTextAlignment.Center,
+                        FormattedTextTrimming.None);
 #endif
         }
 
@@ -432,12 +444,6 @@ namespace SharpFlappyBird {
                     g.DrawImageUnscaled(pipeInvertedImage, xOffset,
                         (int)(-hole - topOffset));
                     pipesRects.Add(new Rectangle(xOffset, (int)(-hole - topOffset), pipeImage.Width, pipeImage.Height));
-
-                    if(!pipe.Passed && base.X1 >= xOffset) {
-                        pipe.Passed = true;
-                        score += 1;
-                        if(!isMonoRT) Bass.ChannelPlay(sndHndScore, true);
-                    }
 #else
                     // Bottom Pipe
                     g.DrawImage(pipeImage, xOffset,
@@ -448,12 +454,13 @@ namespace SharpFlappyBird {
                     g.DrawImage(pipeInvertedImage, xOffset,
                         (int)(-hole - topOffset));
                     pipesRects.Add(new Rectangle(xOffset, (int)(-hole - topOffset), pipeImage.Width, pipeImage.Height));
+#endif
 
                     if(!pipe.Passed && base.X1 >= xOffset) {
                         pipe.Passed = true;
                         score += 1;
+                        if(!isMonoRT) Bass.ChannelPlay(sndHndScore, true);
                     }
-#endif
                 } else
                     break;
             }
@@ -462,9 +469,7 @@ namespace SharpFlappyBird {
         private bool CheckCollision() {
             if(base.Y1 + spriteRect.Width >= bgImgHeight) { // Collision with floor
                 gameState = GameStates.GameOver;
-#if WINFORMS
                 if(!isMonoRT) Bass.ChannelPlay(sndHndGameOver, true);
-#endif
                 return true;
             }
 
@@ -494,7 +499,6 @@ namespace SharpFlappyBird {
             }
         }
 
-#if WINFORMS
         private bool SetupBASS() {
             string platform = Runtime.Platform.ToString().ToLower();
             string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.MacOSX ? "x64" : "x86";
@@ -516,7 +520,11 @@ namespace SharpFlappyBird {
             try {
                 result = Bass.Init();
             } catch(DllNotFoundException) {
+#if WINFORMS
                 Application.Restart();
+#else
+                Application.Instance.Restart();
+#endif
                 result = false;
             } finally {
                 result = true;
@@ -524,6 +532,5 @@ namespace SharpFlappyBird {
 
             return result;
         }
-#endif
     }
 }

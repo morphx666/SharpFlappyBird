@@ -1,0 +1,28 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+	
+  <PropertyGroup>
+    <OutputType>WinExe</OutputType>
+    <TargetFrameworks>net461</TargetFrameworks>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
+    <OutputPath>..\..\Release\Eto</OutputPath>
+    <DefineConstants>TRACE;WINFORMS=0</DefineConstants>
+  </PropertyGroup>
+	
+  <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
+    <OutputPath>..\..\Release\Eto</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+  </PropertyGroup>
+  
+  <ItemGroup>
+    <ProjectReference Include="..\SharpFlappyBird\SharpFlappyBird.csproj" />
+  </ItemGroup>
+	
+  <ItemGroup>
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.0" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.0" />
+    <PackageReference Include="Eto.Platform.Mac64" Version="2.5.0" />
+  </ItemGroup>
+	
+</Project>

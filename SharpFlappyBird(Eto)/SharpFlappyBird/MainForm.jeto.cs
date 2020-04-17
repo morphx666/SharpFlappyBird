@@ -14,8 +14,8 @@ namespace SharpFlappyBird {
 
             MessageBox.Show("The Eto.Forms version does not currently support the following features:" +
                             "\n" +
-                            "\n - Text Rendering" +
-                            "\n - Audio (Sound FX and background music)");
+                            "\n - Text Rendering outlining" +
+                            "\n - Audio under non-Windows platforms");
 
             Image bImg = new Bitmap(GetAsset("images", "background.png"));
             Image gImg = new Bitmap(GetAsset("images", "ground.png"));
@@ -25,7 +25,7 @@ namespace SharpFlappyBird {
                                   bImg,
                                   gImg,
                                   new Bitmap(GetAsset("images", "pipe.png")),
-                                  null,
+                                  new FontFamily("04b_19"),
                                   GetAsset("sounds", "jump.ogg"),
                                   GetAsset("sounds", "score.ogg"),
                                   GetAsset("sounds", "gameover.ogg"),
