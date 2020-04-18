@@ -2,14 +2,16 @@
 	
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
+    <AssemblyVersion>2020.4.109.3</AssemblyVersion>
+    <FileVersion>2020.4.109.3</FileVersion>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
-    <DefineConstants>TRACE;WINFORMS=0</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|netstandard2.0|AnyCPU'">
-    <DefineConstants>TRACE;WINFORMS=0</DefineConstants>
+    <DefineConstants>TRACE</DefineConstants>
   </PropertyGroup>
   
   <ItemGroup>

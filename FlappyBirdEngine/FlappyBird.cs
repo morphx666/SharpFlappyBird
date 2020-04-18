@@ -142,10 +142,6 @@ namespace SharpFlappyBird {
 
             bgImgHeight = backgroundImage.Height;
 
-            SetupEventHandlers();
-            ResetGame();
-            RunGameLogic();
-
             if(!isMonoRT) {
                 if(CanRun = SetupBASS()) {
                     sndHndJump = Bass.CreateStream(jumpSound);
@@ -153,10 +149,13 @@ namespace SharpFlappyBird {
                     sndHndGameOver = Bass.CreateStream(gameOverSound);
 
                     sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
-                    int h = Bass.SampleGetChannel(sndHndBackgroundMusic);
-                    Bass.ChannelPlay(h);
+                    Bass.ChannelPlay(Bass.SampleGetChannel(sndHndBackgroundMusic));
                 }
             }
+
+            SetupEventHandlers();
+            ResetGame();
+            RunGameLogic();
         }
 
         public float Scale {
@@ -521,15 +520,22 @@ namespace SharpFlappyBird {
 
             string path = Path.GetFullPath(Path.Combine("Bass", platform, architecture));
             FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
-            File.Copy(lib.FullName, Path.GetFullPath(Path.Combine(lib.Name)), true);
+            string fileName = Path.GetFullPath(Path.Combine(lib.Name));
+            if(!File.Exists(fileName)) File.Copy(lib.FullName, fileName, false);
 
 #if DEBUG
             Console.WriteLine($"Bass Library: {lib.Name} ({platform} {architecture})");
 #endif
 
             bool result;
+
+
+
             try {
-                result = Bass.Init();
+#if DEBUG
+                Console.WriteLine("Initializing Bass");
+#endif
+                result = Bass.Init(1);
             } catch(DllNotFoundException) {
 #if WINFORMS
                 Application.Restart();

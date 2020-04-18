@@ -12,7 +12,10 @@ namespace SharpFlappyBird {
         public MainForm() {
             JsonReader.Load(this);
 
-            FontFamily ff = new FontFamily("04b_19");
+            FontFamily ff = Fonts.Monospace(12).Family;
+            try {
+                ff = new FontFamily("04b_19");
+            } catch { }
 
             Image bImg = new Bitmap(GetAsset("images", "background.png"));
             Image gImg = new Bitmap(GetAsset("images", "ground.png"));
@@ -42,18 +45,17 @@ namespace SharpFlappyBird {
                 this.Location = new Point((int)((sb.Width - this.Width) / 2),
                                           (int)(sb.Height - this.Height) / 2);
 
-                if(ff.LocalizedName != "04b_19") {
+                if(ff?.LocalizedName != "04b_19") {
                     MessageBox.Show(@"Please install the font 'flappy.ttf' under the folder 'Assets\font' before running the game", MessageBoxType.Error);
                     Application.Instance.Quit();
                 } else {
-                    MessageBox.Show("The Eto.Forms version does not currently support the following features:" +
-                                    "\n" +
-                                    "\n - Text Rendering outlining (missing support for 'GraphicsPath.AddString')" +
-                                    "\n - Audio under non-Windows platforms (due to an apparent bug in the 'MannagedBass' library)",
-                                    "Eto.Forms framework limitations",
-                                    MessageBoxType.Information);
+                    //MessageBox.Show("The Eto.Forms version does not currently support the following features:" +
+                    //                "\n" +
+                    //                "\n - Text Rendering outlining (missing support for 'GraphicsPath.AddString')",
+                    //                "Eto.Forms framework limitations",
+                    //                MessageBoxType.Information);
                 }
-                };
+            };
 
             Canvas.Paint += (object s, PaintEventArgs e) => bird.DrawScene(e);
         }
