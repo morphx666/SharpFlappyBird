@@ -86,7 +86,6 @@ namespace SharpFlappyBird {
         private readonly List<Pipe> pipes = new List<Pipe>();
         private readonly ConcurrentBag<Rectangle> pipesRects = new ConcurrentBag<Rectangle>();
 
-        private readonly bool isMonoRT = false;// Type.GetType("System.MonoType") != null;
 #if WINFORMS
         private readonly MethodInvoker paintSurface;
 #endif
@@ -142,15 +141,13 @@ namespace SharpFlappyBird {
 
             bgImgHeight = backgroundImage.Height;
 
-            if(!isMonoRT) {
-                if(CanRun = SetupBASS()) {
-                    sndHndJump = Bass.CreateStream(jumpSound);
-                    sndHndScore = Bass.CreateStream(scoreSound);
-                    sndHndGameOver = Bass.CreateStream(gameOverSound);
+            if(CanRun = SetupBASS()) {
+                sndHndJump = Bass.CreateStream(jumpSound);
+                sndHndScore = Bass.CreateStream(scoreSound);
+                sndHndGameOver = Bass.CreateStream(gameOverSound);
 
-                    sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
-                    Bass.ChannelPlay(Bass.SampleGetChannel(sndHndBackgroundMusic));
-                }
+                sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
+                Bass.ChannelPlay(Bass.SampleGetChannel(sndHndBackgroundMusic));
             }
 
             SetupEventHandlers();
@@ -188,7 +185,7 @@ namespace SharpFlappyBird {
             acceleration = new Vector(8, PI270, Origin);
             velocity.Magnitude = 0;
 
-            if(!isMonoRT) Bass.ChannelPlay(sndHndJump, true);
+            Bass.ChannelPlay(sndHndJump, true);
         }
 
         private void SetupEventHandlers() {
@@ -307,14 +304,14 @@ namespace SharpFlappyBird {
             g.ScaleTransform(mScale, mScale);
 
 #if WINFORMS
-            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceCopy;
+            g.CompositingMode = CompositingMode.SourceCopy;
             g.DrawImageUnscaled(backgroundImage, 0, 0);
-            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceOver;
+            g.CompositingMode = CompositingMode.SourceOver;
 
             RenderPipes(g);
-            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceCopy;
+            g.CompositingMode = CompositingMode.SourceCopy;
             RenderGround(g);
-            if(!isMonoRT) g.CompositingMode = CompositingMode.SourceOver;
+            g.CompositingMode = CompositingMode.SourceOver;
             RenderSprite(g);
 
             if(gameState == GameStates.Normal) frameCount += 1;
@@ -469,7 +466,7 @@ namespace SharpFlappyBird {
                     if(!pipe.Passed && base.X1 >= xOffset) {
                         pipe.Passed = true;
                         score += 1;
-                        if(!isMonoRT) Bass.ChannelPlay(sndHndScore, true);
+                        Bass.ChannelPlay(sndHndScore, true);
                     }
                 } else
                     break;
@@ -479,7 +476,7 @@ namespace SharpFlappyBird {
         private bool CheckCollision() {
             if(base.Y1 + spriteRect.Width >= bgImgHeight) { // Collision with floor
                 gameState = GameStates.GameOver;
-                if(!isMonoRT) Bass.ChannelPlay(sndHndGameOver, true);
+                Bass.ChannelPlay(sndHndGameOver, true);
                 return true;
             }
 
