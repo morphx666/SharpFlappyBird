@@ -510,6 +510,7 @@ namespace SharpFlappyBird {
         }
 
         private bool SetupBASS() {
+            bool result = false;
             string platform = Runtime.Platform.ToString().ToLower();
             string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.MacOSX ? "x64" : "x86";
 
@@ -520,31 +521,32 @@ namespace SharpFlappyBird {
 
             string path = Path.GetFullPath(Path.Combine("Bass", platform, architecture));
             FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
-            string fileName = Path.GetFullPath(Path.Combine(lib.Name));
-            if(!File.Exists(fileName)) File.Copy(lib.FullName, fileName, false);
+            if(lib.Exists) {
+                string fileName = Path.GetFullPath(Path.Combine(lib.Name));
+                if(!File.Exists(fileName)) File.Copy(lib.FullName, fileName, false);
+                result = true;
+            } else {
+                MessageBox.Show($"The BASS library needed for this platform was not found at:\n{lib.FullName}");
+            }
 
 #if DEBUG
             Console.WriteLine($"Bass Library: {lib.Name} ({platform} {architecture})");
 #endif
 
-            bool result;
-
-
-
-            try {
+            if(result) {
+                try {
 #if DEBUG
-                Console.WriteLine("Initializing Bass");
+                    Console.WriteLine("Initializing Bass");
 #endif
-                result = Bass.Init(1);
-            } catch(DllNotFoundException) {
+                    result = Bass.Init();
+                } catch(DllNotFoundException) {
 #if WINFORMS
-                Application.Restart();
+                    Application.Restart();
 #else
-                Application.Instance.Restart();
+                    Application.Instance.Restart();
 #endif
-                result = false;
-            } finally {
-                result = true;
+                    result = false;
+                }
             }
 
             return result;
