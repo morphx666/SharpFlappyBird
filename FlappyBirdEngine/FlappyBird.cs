@@ -5,7 +5,7 @@ using System.Collections.Generic;
 using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using System.Drawing;
-#else
+#elif ETOFORMS
 using Eto.Drawing;
 using Eto.Forms;
 #endif
@@ -20,6 +20,9 @@ namespace SharpFlappyBird {
         private float mScale = 1.0f;
         public bool CanRun = true;
         private bool isClosing = false;
+        
+        const float etoFactorH = 1.32f;
+        const float etoFactorV = 1.6f;
 
         private enum SpriteStates {
             Waiting = -1,
@@ -115,7 +118,7 @@ namespace SharpFlappyBird {
 #if WINFORMS
             this.pipeInvertedImage = (Image)pipeImage.Clone();
             pipeInvertedImage.RotateFlip(RotateFlipType.RotateNoneFlipY);
-#else
+#elif ETOFORMS
             using(Bitmap bmp = new Bitmap(pipeImage.Size, PixelFormat.Format32bppRgba)) { // Flip Y
                 using(Graphics g = new Graphics(bmp)) {
                     g.TranslateTransform(bmp.Width / 2, bmp.Height / 2);
@@ -129,7 +132,7 @@ namespace SharpFlappyBird {
             this.gameFontFamily = gameFontFamily;
 #if WINFORMS
             gameFontFormat = new StringFormat { Alignment = StringAlignment.Center };
-#else
+#elif ETOFORMS
             ((Window)surface.FindParent(typeof(Form))).Closing += (_, __) => isClosing = true;
 #endif
             Scale = mScale;
@@ -165,12 +168,12 @@ namespace SharpFlappyBird {
                 gameFontLarge = new Font(gameFontFamily, 50 * mScale, FontStyle.Regular);
                 gameFontSmall?.Dispose();
                 gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
-#else
-                // FIXME: Why do we need the 1.6 factor?
+#elif ETOFORMS
+                // FIXME: Why do we need the `etoFactor` factor?
                 gameFontLarge?.Dispose();
-                gameFontLarge = new Font(gameFontFamily.Name, 1.6f * 50 * mScale);
+                gameFontLarge = new Font(gameFontFamily.Name, etoFactorH * 50 * mScale);
                 gameFontSmall?.Dispose();
-                gameFontSmall = new Font(gameFontFamily.Name, 1.6f * 30 * mScale);
+                gameFontSmall = new Font(gameFontFamily.Name, etoFactorH * 30 * mScale);
 #endif
             }
         }
@@ -192,7 +195,7 @@ namespace SharpFlappyBird {
             surface.KeyDown += (object s, KeyEventArgs e) => {
 #if WINFORMS
                 switch(e.KeyCode) {
-#else
+#elif ETOFORMS
                 switch(e.Key) {
 #endif
                     case Keys.Space:
@@ -278,7 +281,7 @@ namespace SharpFlappyBird {
 
 #if WINFORMS
                     if(surface.IsHandleCreated) surface.BeginInvoke(paintSurface);
-#else
+#elif ETOFORMS
                     Application.Instance.Invoke(() => surface.Invalidate());
 #endif
                 }
@@ -297,7 +300,7 @@ namespace SharpFlappyBird {
 
 #if WINFORMS
             g.InterpolationMode = InterpolationMode.NearestNeighbor;
-#else
+#elif ETOFORMS
             g.ImageInterpolation = ImageInterpolation.Low;
 #endif
 
@@ -313,16 +316,14 @@ namespace SharpFlappyBird {
             RenderGround(g);
             g.CompositingMode = CompositingMode.SourceOver;
             RenderSprite(g);
-
-            if(gameState == GameStates.Normal) frameCount += 1;
-#else
+#elif ETOFORMS
             g.DrawImage(backgroundImage, 0, 0);
             RenderPipes(g);
             RenderGround(g);
             RenderSprite(g);
+#endif
 
             if(gameState == GameStates.Normal) frameCount += 1;
-#endif
 
             RenderText(g, score.ToString(), 1, Brushes.WhiteSmoke, gameFontLarge);
             if(gameState == GameStates.Normal) {
@@ -349,32 +350,28 @@ namespace SharpFlappyBird {
                 g.DrawPath(new Pen(Brushes.Black, 6), p);
                 g.FillPath(color, p);
             }
-#else
-            // FIXME: Since Eto doesn't support GraphicsPath.AddString,
-            // add a semi-transparent background to give the text some contrast 
+#elif ETOFORMS
+            //FIXME: This solves the problem with NetStandard 2.0 not supporting
+            //        GraphicsPath.AddString but it's waaaaay too slow
             SizeF s = g.MeasureString(font, text);
-            float lh = 1.3f * gameFontLarge.LineHeight * line;
-            g.FillRectangle(Color.FromArgb(32, 32, 32, 128), new RectangleF(
-                            (backgroundImage.Width - s.Width) / 2.0f,
-                            lh,
-                            s.Width,
-                            s.Height));
-
-            // FIXME: Questions about the DrawText RectangleF:
-            // 1) Why the width doesn't need to be scaled?
-            // 2) Why the height needs to be so... large?
-            g.DrawText(font, color,
-                        new RectangleF(0, lh,
-                                       backgroundImage.Width, backgroundImage.Height),
-                        text,
-                        FormattedTextWrapMode.None,
-                        FormattedTextAlignment.Center,
-                        FormattedTextTrimming.None);
+            s.Width *= etoFactorH;
+            s.Height *= etoFactorV;
+            Rectangle r = new Rectangle(
+                            (int)((backgroundImage.Width - s.Width) / 2.0),
+                            (int)(etoFactorV * gameFontLarge.LineHeight * line),
+                            (int)s.Width ,
+                            (int)s.Height);
+            using(GraphicsPath p = MainForm.FromString(g, text, 
+                                                       font.Family, font.FontStyle, 
+                                                       (float)(g.DPI * font.Size / 72.0), r)) {
+                g.DrawPath(new Pen(Brushes.Black, 6), p);
+                g.FillPath(color, p);
+            }
 #endif
         }
 
         private void RenderSprite(Graphics g) {
-#if !WINFORMS
+#if ETOFORMS
             g.SaveTransform();
 #endif
             g.TranslateTransform((float)(base.X1 + spriteW2),
@@ -406,7 +403,7 @@ namespace SharpFlappyBird {
                             GraphicsUnit.Pixel);
 
             g.ResetTransform();
-#else
+#elif ETOFORMS
             g.DrawImage(sprite,
                             spriteRect,
                             new RectangleF(-spriteW2, -(spriteH2 + yOffset),
@@ -422,7 +419,7 @@ namespace SharpFlappyBird {
             for(int x = -groundOffset; x < backgroundImage.Width; x += w)
 #if WINFORMS
                 g.DrawImageUnscaled(groundImage, x, bgImgHeight);
-#else
+#elif ETOFORMS
                 g.DrawImage(groundImage, x, bgImgHeight);
 #endif
         }
@@ -451,7 +448,7 @@ namespace SharpFlappyBird {
                     g.DrawImageUnscaled(pipeInvertedImage, xOffset,
                         (int)(-hole - topOffset));
                     pipesRects.Add(new Rectangle(xOffset, (int)(-hole - topOffset), pipeImage.Width, pipeImage.Height));
-#else
+#elif ETOFORMS
                     // Bottom Pipe
                     g.DrawImage(pipeImage, xOffset,
                         (int)(bgImgHeight - hole));
@@ -487,7 +484,7 @@ namespace SharpFlappyBird {
             while(pipesRects.TryTake(out Rectangle cr)) {
 #if WINFORMS
                 if(cr.IntersectsWith(sr)) { // Collision with pipe
-#else
+#elif ETOFORMS
                 if(cr.Intersects(sr)) { // Collision with pipe
 #endif
                     gameState = GameStates.Crashed;
@@ -539,7 +536,7 @@ namespace SharpFlappyBird {
                 } catch(DllNotFoundException) {
 #if WINFORMS
                     Application.Restart();
-#else
+#elif ETOFORMS
                     Application.Instance.Restart();
 #endif
                     result = false;

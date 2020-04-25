@@ -3,6 +3,9 @@ using Eto.Drawing;
 using Eto.Serialization.Json;
 using System.IO;
 using Eto;
+using System.Collections.Generic;
+using System;
+using System.Diagnostics;
 
 namespace SharpFlappyBird {
     public class MainForm : Form {
@@ -61,11 +64,85 @@ namespace SharpFlappyBird {
         }
 
         private static string GetAsset(string subFolder, string assetFileName) {
-            if(Eto.Platform.Detect.IsMac) { // FIXME: Need to figure out a better a way to manage the assets
+            if(Platform.Detect.IsMac) { // FIXME: Need to figure out a better a way to manage the assets
                 string path = EtoEnvironment.GetFolderPath(EtoSpecialFolder.ApplicationResources);
                 return Path.GetFullPath(Path.Combine(path, "../MacOS", assetFileName));
             }
             return Path.GetFullPath(Path.Combine("Assets", subFolder, assetFileName));
+        }
+
+        private struct FontData {
+            private readonly string text;
+            private readonly FontFamily family;
+            private readonly FontStyle style;
+            private readonly float emSize;
+
+            public FontData(string text, FontFamily family, FontStyle style, float emSize) {
+                this.text = text;
+                this.family = family;
+                this.style = style;
+                this.emSize = emSize;
+            }
+
+            public static bool operator ==(FontData fd1, FontData fd2) {
+                return fd1.text == fd2.text &&
+                       fd1.family == fd2.family &&
+                       fd1.style == fd2.style &&
+                       fd1.emSize == fd2.emSize;
+            }
+
+            public static bool operator !=(FontData fd1, FontData fd2) {
+                return !(fd1 == fd2);
+            }
+
+            public override bool Equals(object obj) {
+                return this == (FontData)obj;
+            }
+
+            public override int GetHashCode() {
+                return base.GetHashCode();
+            }
+        }
+
+        private static Dictionary<FontData, GraphicsPath> cache = new Dictionary<FontData, GraphicsPath>();
+        public static GraphicsPath FromString(Graphics pg, string s, FontFamily family, FontStyle style, float emSize, Rectangle layoutRect) {
+            FontData fd = new FontData(s, family, style, emSize);
+            if(cache.ContainsKey(fd)) return cache[fd];
+
+            GraphicsPath p = new GraphicsPath();
+
+            using(Bitmap bmp = new Bitmap(layoutRect.Width, layoutRect.Height, pg)) {
+                using(Graphics g = new Graphics(bmp)) {
+                    g.Clear(Colors.Black);
+                    using(Font f = new Font(family, emSize)) {
+                        g.DrawText(f, Brushes.White, PointF.Empty, s);
+                    }
+                }
+
+                int x;
+                int lx = 0;
+                for(int y = 0; y < layoutRect.Height; y++) {
+                    x = 0;
+
+                    while(x < layoutRect.Width) {
+                        while(x < layoutRect.Width && bmp.GetPixel(x, y) == Colors.Black) x++;
+
+                        if(x < layoutRect.Width) {
+                            lx = x;
+                            while(x < layoutRect.Width && bmp.GetPixel(x, y) != Colors.Black) x++;
+
+                            if(x > layoutRect.Width) x = layoutRect.Width;
+
+                            Rectangle r = Rectangle.FromSides(lx, y, x, y + 1);
+                            r.Offset(layoutRect.X, layoutRect.Y);
+                            p.AddRectangle(r);
+                        }
+                    }
+                }
+
+                cache.Add(fd, p);
+                return p;
+            }
         }
     }
 }
