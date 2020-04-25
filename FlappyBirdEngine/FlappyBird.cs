@@ -20,7 +20,7 @@ namespace SharpFlappyBird {
         private float mScale = 1.0f;
         public bool CanRun = true;
         private bool isClosing = false;
-        
+
         const float etoFactorH = 1.32f;
         const float etoFactorV = 1.6f;
 
@@ -37,6 +37,14 @@ namespace SharpFlappyBird {
             Crashed = 1,
             GameOver
         }
+
+#if ETOFORMS
+        private enum TextRenderingModes {
+            Fast,
+            Accurate
+        }
+        private TextRenderingModes textRenderingMode = TextRenderingModes.Accurate;
+#endif
 
         private class Pipe {
             public int FrameCount;
@@ -351,21 +359,38 @@ namespace SharpFlappyBird {
                 g.FillPath(color, p);
             }
 #elif ETOFORMS
-            //FIXME: This solves the problem with NetStandard 2.0 not supporting
-            //        GraphicsPath.AddString but it's waaaaay too slow
             SizeF s = g.MeasureString(font, text);
-            s.Width *= etoFactorH;
-            s.Height *= etoFactorV;
-            Rectangle r = new Rectangle(
-                            (int)((backgroundImage.Width - s.Width) / 2.0),
-                            (int)(etoFactorV * gameFontLarge.LineHeight * line),
-                            (int)s.Width ,
-                            (int)s.Height);
-            using(GraphicsPath p = MainForm.FromString(g, text, 
-                                                       font.Family, font.FontStyle, 
-                                                       (float)(g.DPI * font.Size / 72.0), r)) {
-                g.DrawPath(new Pen(Brushes.Black, 6), p);
-                g.FillPath(color, p);
+            float lh = etoFactorV * gameFontLarge.LineHeight * line;
+
+            switch(textRenderingMode) {
+                case TextRenderingModes.Fast:
+                    // FIXME: Since NetStandard 2.0 doesn't support GraphicsPath.AddString,
+                    // add a semi-transparent background to give the text some contrast 
+                    g.FillRectangle(Color.FromArgb(32, 32, 32, 128), new RectangleF(
+                                    (backgroundImage.Width - s.Width) / 2.0f - 1,
+                                    lh - 1,
+                                    s.Width + 2,
+                                    s.Height + 2));
+
+                    // FIXME: Questions about the DrawText RectangleF:
+                    // 1) Why the width doesn't need to be scaled?
+                    // 2) Why the height needs to be so... large?
+                    g.DrawText(font, color,
+                                new RectangleF(0, lh,
+                                               backgroundImage.Width, backgroundImage.Height),
+                                text,
+                                FormattedTextWrapMode.None,
+                                FormattedTextAlignment.Center,
+                                FormattedTextTrimming.None);
+                    break;
+                case TextRenderingModes.Accurate:
+                    s.Width *= etoFactorH;
+                    Rectangle r = new Rectangle((int)((backgroundImage.Width - s.Width) / 2.0),
+                                                (int)lh,
+                                                backgroundImage.Width,
+                                                backgroundImage.Height);
+                    g.DrawImage(MainForm.CreateString(g, text, color, font, r), r);
+                    break;
             }
 #endif
         }

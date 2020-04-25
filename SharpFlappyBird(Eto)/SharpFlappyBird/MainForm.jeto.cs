@@ -6,11 +6,13 @@ using Eto;
 using System.Collections.Generic;
 using System;
 using System.Diagnostics;
+using System.Runtime.CompilerServices;
 
 namespace SharpFlappyBird {
     public class MainForm : Form {
         protected Drawable Canvas;
         private readonly FlappyBird bird;
+        private static Dictionary<FontData, Bitmap> cache = new Dictionary<FontData, Bitmap>();
 
         public MainForm() {
             JsonReader.Load(this);
@@ -73,22 +75,16 @@ namespace SharpFlappyBird {
 
         private struct FontData {
             private readonly string text;
-            private readonly FontFamily family;
-            private readonly FontStyle style;
-            private readonly float emSize;
+            private readonly Font font;
 
-            public FontData(string text, FontFamily family, FontStyle style, float emSize) {
+            public FontData(string text, Font font) {
                 this.text = text;
-                this.family = family;
-                this.style = style;
-                this.emSize = emSize;
+                this.font = font;
             }
 
             public static bool operator ==(FontData fd1, FontData fd2) {
                 return fd1.text == fd2.text &&
-                       fd1.family == fd2.family &&
-                       fd1.style == fd2.style &&
-                       fd1.emSize == fd2.emSize;
+                       fd1.font == fd2.font;
             }
 
             public static bool operator !=(FontData fd1, FontData fd2) {
@@ -104,11 +100,7 @@ namespace SharpFlappyBird {
             }
         }
 
-        private static Dictionary<FontData, GraphicsPath> cache = new Dictionary<FontData, GraphicsPath>();
-        public static GraphicsPath FromString(Graphics pg, string s, FontFamily family, FontStyle style, float emSize, Rectangle layoutRect) {
-            FontData fd = new FontData(s, family, style, emSize);
-            if(cache.ContainsKey(fd)) return cache[fd];
-
+        private static GraphicsPath FromString(Graphics pg, string s, FontFamily family, FontStyle style, float emSize, Rectangle layoutRect, int boderSize) {
             GraphicsPath p = new GraphicsPath();
 
             using(Bitmap bmp = new Bitmap(layoutRect.Width, layoutRect.Height, pg)) {
@@ -119,6 +111,7 @@ namespace SharpFlappyBird {
                     }
                 }
 
+                int b = boderSize / 2;
                 int x;
                 int lx = 0;
                 for(int y = 0; y < layoutRect.Height; y++) {
@@ -133,16 +126,32 @@ namespace SharpFlappyBird {
 
                             if(x > layoutRect.Width) x = layoutRect.Width;
 
-                            Rectangle r = Rectangle.FromSides(lx, y, x, y + 1);
-                            r.Offset(layoutRect.X, layoutRect.Y);
-                            p.AddRectangle(r);
+                            p.AddRectangle(Rectangle.FromSides(lx + b, y, x + b, y + 1));
                         }
                     }
                 }
 
-                cache.Add(fd, p);
                 return p;
             }
+        }
+
+        public static Bitmap CreateString(Graphics pg, string text, Brush color, Font font, Rectangle layoutRect, int borderSie = 6) {
+            FontData fd = new FontData(text, font);
+            if(cache.ContainsKey(fd)) return cache[fd];
+
+            Bitmap bmp = new Bitmap(layoutRect.Width, layoutRect.Height, PixelFormat.Format32bppRgba);
+            using(Graphics g = new Graphics(bmp)) {
+                using(GraphicsPath p = FromString(pg, text,
+                                                   font.Family, font.FontStyle,
+                                                   (float)(pg.DPI * font.Size / 72.0),
+                                                   layoutRect, borderSie)) {
+                    g.DrawPath(new Pen(Brushes.Black, borderSie), p);
+                    g.FillPath(color, p);
+                }
+            }
+
+            cache.Add(fd, bmp);
+            return bmp;
         }
     }
 }
