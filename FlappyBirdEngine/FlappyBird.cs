@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using RayCasting;
 using ManagedBass;
+using System.Diagnostics;
 
 namespace SharpFlappyBird {
     public class FlappyBird : Vector {
@@ -78,7 +79,7 @@ namespace SharpFlappyBird {
         private readonly Image pipeInvertedImage;
         private readonly int bgImgHeight;
 
-        private FontFamily gameFontFamily;
+        private readonly FontFamily gameFontFamily;
         private Font gameFontLarge;
         private Font gameFontSmall;
 #if WINFORMS
@@ -379,8 +380,8 @@ namespace SharpFlappyBird {
                 case TextRenderingModes.Accurate:
                     Rectangle r = new Rectangle((int)((backgroundImage.Width - s.Width) / 2.0),
                                                 (int)lh,
-                                                backgroundImage.Width,
-                                                backgroundImage.Height);
+                                                (int)s.Width + 6,
+                                                (int)s.Height + 6);
                     g.DrawImage(MainForm.CreateString(g, text, color, font, r), r);
                     break;
             }

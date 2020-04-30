@@ -71,6 +71,8 @@ namespace SharpFlappyBird {
         }
 
         #region Simulate Path.AddString under NetStandard 2.0
+        public static int CachedTextCount { get => cache.Count; }
+
         private struct FontData {
             private readonly string text;
             private readonly Font font;

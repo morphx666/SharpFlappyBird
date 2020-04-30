@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFrameworks>net461</TargetFrameworks>
-    <AssemblyVersion>2020.4.121.97</AssemblyVersion>
-    <FileVersion>2020.4.121.97</FileVersion>
+    <AssemblyVersion>2020.4.121.101</AssemblyVersion>
+    <FileVersion>2020.4.121.101</FileVersion>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">

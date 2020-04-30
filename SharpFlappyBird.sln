@@ -11,9 +11,9 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Eto", "Eto", "{C27C56EE-14C
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "FlappyBirdEngine", "FlappyBirdEngine\FlappyBirdEngine.shproj", "{9F188DBC-D1D9-4436-A70E-5BCB4C752896}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFlappyBird", "SharpFlappyBird(Eto)\SharpFlappyBird\SharpFlappyBird.csproj", "{D1848984-A2CA-4745-815E-4B68801D8897}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFlappyBird", "SharpFlappyBird(Eto)\SharpFlappyBird\SharpFlappyBird.csproj", "{D1848984-A2CA-4745-815E-4B68801D8897}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "SharpFlappyBird.Desktop", "SharpFlappyBird(Eto)\SharpFlappyBird.Desktop\SharpFlappyBird.Desktop.csproj", "{7ECD1E1D-3E0D-4CF9-84BC-C2024D6057EB}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "SharpFlappyBird.Desktop", "SharpFlappyBird(Eto)\SharpFlappyBird.Desktop\SharpFlappyBird.Desktop.csproj", "{7ECD1E1D-3E0D-4CF9-84BC-C2024D6057EB}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
