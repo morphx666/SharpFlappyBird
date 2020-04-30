@@ -65,7 +65,7 @@ namespace SharpFlappyBird {
         private static string GetAsset(string subFolder, string assetFileName) {
             if(Platform.Detect.IsMac) {
                 string path = EtoEnvironment.GetFolderPath(EtoSpecialFolder.ApplicationResources);
-                return Path.GetFullPath(Path.Combine(path, "../MonoBundle", assetFileName));
+                return Path.GetFullPath(Path.Combine(path, "../MacOS/Assets", subFolder, assetFileName));
             } else
                 return Path.GetFullPath(Path.Combine("Assets", subFolder, assetFileName));
         }

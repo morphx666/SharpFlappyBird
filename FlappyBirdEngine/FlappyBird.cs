@@ -152,11 +152,15 @@ namespace SharpFlappyBird {
 
             if(CanRun = SetupBASS()) {
                 sndHndJump = Bass.CreateStream(jumpSound);
+                Bass.ChannelSetAttribute(sndHndJump, ChannelAttribute.Volume, 0.3);
                 sndHndScore = Bass.CreateStream(scoreSound);
+                Bass.ChannelSetAttribute(sndHndScore, ChannelAttribute.Volume, 0.3);
                 sndHndGameOver = Bass.CreateStream(gameOverSound);
+                Bass.ChannelSetAttribute(sndHndGameOver, ChannelAttribute.Volume, 0.3);
 
                 sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
                 Bass.ChannelPlay(Bass.SampleGetChannel(sndHndBackgroundMusic));
+                Bass.ChannelSetAttribute(sndHndBackgroundMusic, ChannelAttribute.Volume, 0.2);
             }
 
             SetupEventHandlers();
@@ -523,7 +527,7 @@ namespace SharpFlappyBird {
 
         private bool SetupBASS() {
 #if ETOFORMS
-            if(Platform.Detect.IsMac) return true;
+            //if(Platform.Detect.IsMac) return true;
 #endif
 
             bool result = false;
@@ -536,13 +540,31 @@ namespace SharpFlappyBird {
             }
 
             string path = Path.GetFullPath(Path.Combine("Bass", platform, architecture));
-            FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
-            if(lib.Exists) {
-                string fileName = Path.GetFullPath(Path.Combine(lib.Name));
-                if(!File.Exists(fileName)) File.Copy(lib.FullName, fileName, false);
-                result = true;
-            } else {
-                MessageBox.Show($"The BASS library needed for this platform was not found at:\n{lib.FullName}");
+#if ETOFORMS
+            if(Runtime.Platform == Runtime.Platforms.MacOSX) {
+                path = EtoEnvironment.GetFolderPath(EtoSpecialFolder.ApplicationResources);
+                path = Path.GetFullPath(Path.Combine(path, "../MacOS/Bass", platform, architecture));
+            }
+#endif
+            try {
+                FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
+                if(lib.Exists) {
+                    string fileName = Path.GetFullPath(Path.Combine(lib.Name));
+#if ETOFORMS
+                    if(Runtime.Platform == Runtime.Platforms.MacOSX) {
+                        path = EtoEnvironment.GetFolderPath(EtoSpecialFolder.ApplicationResources);
+                        fileName = Path.GetFullPath(Path.Combine(path, lib.Name));
+
+                        //MessageBox.Show($"lib.FullName: {lib.FullName}\n\nfileName: {fileName}");
+                    }
+#endif
+                    if(!File.Exists(fileName)) File.Copy(lib.FullName, fileName, false);
+                    result = true;
+                } else {
+                    MessageBox.Show($"The BASS library needed for this platform was not found at:\n{lib.FullName}");
+                }
+            } catch(Exception ex) {
+                MessageBox.Show(ex.Message);
             }
 
 #if DEBUG
@@ -560,6 +582,7 @@ namespace SharpFlappyBird {
                     Application.Restart();
 #elif ETOFORMS
                     Application.Instance.Restart();
+                    Application.Instance.Quit();
 #endif
                     result = false;
                 }
