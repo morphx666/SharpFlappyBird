@@ -5,8 +5,8 @@ using System.IO;
 using Eto;
 using System.Collections.Generic;
 using System;
-using System.Diagnostics;
-using System.Runtime.CompilerServices;
+using System.Threading.Tasks;
+using Eto.Threading;
 
 namespace SharpFlappyBird {
     public class MainForm : Form {
@@ -47,18 +47,15 @@ namespace SharpFlappyBird {
                                            (int)((bImg.Height + gImg.Height) * bird.Scale));
 
                 // Center screen
-                this.Location = new Point((int)((sb.Width - this.Width) / 2),
-                                          (int)(sb.Height - this.Height) / 2);
+                Task.Run(() => {
+                    if(Platform.Detect.IsGtk) System.Threading.Thread.Sleep(250); // Because... reasons...
+                    Application.Instance.Invoke(() => this.Location = new Point((int)((sb.Width - this.Width) / 2),
+                                              (int)(sb.Height - this.Height) / 2));
+                });
 
                 if(ff?.LocalizedName != "04b_19") {
                     MessageBox.Show(@"Please install the font 'flappy.ttf' under the folder 'Assets\font' before running the game", MessageBoxType.Error);
                     Application.Instance.Quit();
-                } else {
-                    //MessageBox.Show("The Eto.Forms version does not currently support the following features:" +
-                    //                "\n" +
-                    //                "\n - Text Rendering outlining (missing support for 'GraphicsPath.AddString')",
-                    //                "Eto.Forms framework limitations",
-                    //                MessageBoxType.Information);
                 }
             };
 
@@ -66,20 +63,24 @@ namespace SharpFlappyBird {
         }
 
         private static string GetAsset(string subFolder, string assetFileName) {
-            if(Platform.Detect.IsMac) { // FIXME: Need to figure out a better a way to manage the assets
+            if(Platform.Detect.IsMac) {
                 string path = EtoEnvironment.GetFolderPath(EtoSpecialFolder.ApplicationResources);
-                return Path.GetFullPath(Path.Combine(path, "../MacOS", assetFileName));
-            }
-            return Path.GetFullPath(Path.Combine("Assets", subFolder, assetFileName));
+                return Path.GetFullPath(Path.Combine(path, "../MonoBundle", assetFileName));
+            } else
+                return Path.GetFullPath(Path.Combine("Assets", subFolder, assetFileName));
         }
 
+        #region Simulate Path.AddString under NetStandard 2.0
         private struct FontData {
             private readonly string text;
             private readonly Font font;
+            private readonly int hash;
 
             public FontData(string text, Font font) {
                 this.text = text;
                 this.font = font;
+
+                hash = text.GetHashCode() | font.GetHashCode();
             }
 
             public static bool operator ==(FontData fd1, FontData fd2) {
@@ -96,43 +97,39 @@ namespace SharpFlappyBird {
             }
 
             public override int GetHashCode() {
-                return base.GetHashCode();
+                return hash;
+                //return base.GetHashCode(); // This crashes under macOS
             }
         }
 
-        private static GraphicsPath FromString(Graphics pg, string s, FontFamily family, FontStyle style, float emSize, Rectangle layoutRect, int boderSize) {
+        private static GraphicsPath FromString(Graphics pg, string s, Font f, Rectangle layoutRect, int boderSize) {
             GraphicsPath p = new GraphicsPath();
 
             using(Bitmap bmp = new Bitmap(layoutRect.Width, layoutRect.Height, pg)) {
                 using(Graphics g = new Graphics(bmp)) {
                     g.Clear(Colors.Black);
-                    using(Font f = new Font(family, emSize)) {
-                        g.DrawText(f, Brushes.White, PointF.Empty, s);
-                    }
+                    g.DrawText(f, Brushes.White, PointF.Empty, s);
                 }
 
                 int b = boderSize / 2;
                 int x;
                 int lx = 0;
-                for(int y = 0; y < layoutRect.Height; y++) {
-                    x = 0;
-
-                    while(x < layoutRect.Width) {
-                        while(x < layoutRect.Width && bmp.GetPixel(x, y) == Colors.Black) x++;
-
-                        if(x < layoutRect.Width) {
-                            lx = x;
-                            while(x < layoutRect.Width && bmp.GetPixel(x, y) != Colors.Black) x++;
-
-                            if(x > layoutRect.Width) x = layoutRect.Width;
-
-                            p.AddRectangle(Rectangle.FromSides(lx + b, y, x + b, y + 1));
+                using(BitmapData bd = bmp.Lock()) {
+                    for(int y = 0; y < layoutRect.Height; y++) { // Flood fill algorythm (see VB6's FormShaper Control)
+                        x = 0;
+                        while(x < layoutRect.Width) {
+                            while(x < layoutRect.Width && bd.GetPixel(x, y) == Colors.Black) x++;
+                            if(x < layoutRect.Width) {
+                                lx = x;
+                                while(x < layoutRect.Width && bd.GetPixel(x, y) != Colors.Black) x++;
+                                if(x > layoutRect.Width) x = layoutRect.Width;
+                                p.AddRectangle(Rectangle.FromSides(lx + b, y, x + b, y + 1));
+                            }
                         }
                     }
                 }
-
-                return p;
             }
+            return p;
         }
 
         public static Bitmap CreateString(Graphics pg, string text, Brush color, Font font, Rectangle layoutRect, int borderSie = 6) {
@@ -141,10 +138,7 @@ namespace SharpFlappyBird {
 
             Bitmap bmp = new Bitmap(layoutRect.Width, layoutRect.Height, PixelFormat.Format32bppRgba);
             using(Graphics g = new Graphics(bmp)) {
-                using(GraphicsPath p = FromString(pg, text,
-                                                   font.Family, font.FontStyle,
-                                                   (float)(pg.DPI * font.Size / 72.0),
-                                                   layoutRect, borderSie)) {
+                using(GraphicsPath p = FromString(pg, text, font, layoutRect, borderSie)) {
                     g.DrawPath(new Pen(Brushes.Black, borderSie), p);
                     g.FillPath(color, p);
                 }
@@ -153,5 +147,6 @@ namespace SharpFlappyBird {
             cache.Add(fd, bmp);
             return bmp;
         }
+        #endregion
     }
 }

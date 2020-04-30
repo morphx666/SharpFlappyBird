@@ -6,6 +6,7 @@ using System.Windows.Forms;
 using System.Drawing.Drawing2D;
 using System.Drawing;
 #elif ETOFORMS
+using Eto;
 using Eto.Drawing;
 using Eto.Forms;
 #endif
@@ -20,9 +21,6 @@ namespace SharpFlappyBird {
         private float mScale = 1.0f;
         public bool CanRun = true;
         private bool isClosing = false;
-
-        const float etoFactorH = 1.32f;
-        const float etoFactorV = 1.6f;
 
         private enum SpriteStates {
             Waiting = -1,
@@ -136,7 +134,6 @@ namespace SharpFlappyBird {
                 this.pipeInvertedImage = (Image)bmp.Clone();
             }
 #endif
-
             this.gameFontFamily = gameFontFamily;
 #if WINFORMS
             gameFontFormat = new StringFormat { Alignment = StringAlignment.Center };
@@ -173,15 +170,14 @@ namespace SharpFlappyBird {
 
 #if WINFORMS
                 gameFontLarge?.Dispose();
-                gameFontLarge = new Font(gameFontFamily, 50 * mScale, FontStyle.Regular);
+                gameFontLarge = new Font(gameFontFamily, 50 * mScale);
                 gameFontSmall?.Dispose();
-                gameFontSmall = new Font(gameFontFamily, 30 * mScale, FontStyle.Regular);
+                gameFontSmall = new Font(gameFontFamily, 30 * mScale);
 #elif ETOFORMS
-                // FIXME: Why do we need the `etoFactor` factor?
                 gameFontLarge?.Dispose();
-                gameFontLarge = new Font(gameFontFamily.Name, etoFactorH * 50 * mScale);
+                gameFontLarge = new Font(gameFontFamily, 50);
                 gameFontSmall?.Dispose();
-                gameFontSmall = new Font(gameFontFamily.Name, etoFactorH * 30 * mScale);
+                gameFontSmall = new Font(gameFontFamily, 30);
 #endif
             }
         }
@@ -360,7 +356,7 @@ namespace SharpFlappyBird {
             }
 #elif ETOFORMS
             SizeF s = g.MeasureString(font, text);
-            float lh = etoFactorV * gameFontLarge.LineHeight * line;
+            float lh = g.MeasureString(gameFontLarge, text).Height * line;
 
             switch(textRenderingMode) {
                 case TextRenderingModes.Fast:
@@ -372,9 +368,6 @@ namespace SharpFlappyBird {
                                     s.Width + 2,
                                     s.Height + 2));
 
-                    // FIXME: Questions about the DrawText RectangleF:
-                    // 1) Why the width doesn't need to be scaled?
-                    // 2) Why the height needs to be so... large?
                     g.DrawText(font, color,
                                 new RectangleF(0, lh,
                                                backgroundImage.Width, backgroundImage.Height),
@@ -384,7 +377,6 @@ namespace SharpFlappyBird {
                                 FormattedTextTrimming.None);
                     break;
                 case TextRenderingModes.Accurate:
-                    s.Width *= etoFactorH;
                     Rectangle r = new Rectangle((int)((backgroundImage.Width - s.Width) / 2.0),
                                                 (int)lh,
                                                 backgroundImage.Width,
@@ -529,6 +521,10 @@ namespace SharpFlappyBird {
         }
 
         private bool SetupBASS() {
+#if ETOFORMS
+            if(Platform.Detect.IsMac) return true;
+#endif
+
             bool result = false;
             string platform = Runtime.Platform.ToString().ToLower();
             string architecture = Environment.Is64BitProcess || Runtime.Platform == Runtime.Platforms.MacOSX ? "x64" : "x86";

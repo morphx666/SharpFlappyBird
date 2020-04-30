@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFrameworks>net461</TargetFrameworks>
-    <AssemblyVersion>2020.4.109.3</AssemblyVersion>
-    <FileVersion>2020.4.109.3</FileVersion>
+    <AssemblyVersion>2020.4.121.97</AssemblyVersion>
+    <FileVersion>2020.4.121.97</FileVersion>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
@@ -15,7 +15,7 @@
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Debug|net461|AnyCPU'">
     <OutputPath>..\..\Release\Eto</OutputPath>
-    <DefineConstants>TRACE</DefineConstants>
+    <DefineConstants>TRACE;ETOFORMS</DefineConstants>
     <PlatformTarget>AnyCPU</PlatformTarget>
   </PropertyGroup>
   
