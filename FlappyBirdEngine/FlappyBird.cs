@@ -152,15 +152,11 @@ namespace SharpFlappyBird {
 
             if(CanRun = SetupBASS()) {
                 sndHndJump = Bass.CreateStream(jumpSound);
-                Bass.ChannelSetAttribute(sndHndJump, ChannelAttribute.Volume, 0.3);
                 sndHndScore = Bass.CreateStream(scoreSound);
-                Bass.ChannelSetAttribute(sndHndScore, ChannelAttribute.Volume, 0.3);
                 sndHndGameOver = Bass.CreateStream(gameOverSound);
-                Bass.ChannelSetAttribute(sndHndGameOver, ChannelAttribute.Volume, 0.3);
 
                 sndHndBackgroundMusic = Bass.SampleLoad(backgroundMusic, 0, 0, 1, BassFlags.Loop);
                 Bass.ChannelPlay(Bass.SampleGetChannel(sndHndBackgroundMusic));
-                Bass.ChannelSetAttribute(sndHndBackgroundMusic, ChannelAttribute.Volume, 0.2);
             }
 
             SetupEventHandlers();
