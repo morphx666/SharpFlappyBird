@@ -50,7 +50,7 @@ namespace SharpFlappyBird {
                 Task.Run(() => {
                     if(Platform.Detect.IsGtk) System.Threading.Thread.Sleep(250); // Because... reasons...
                     Application.Instance.Invoke(() => this.Location = new Point((int)((sb.Width - this.Width) / 2),
-                                              (int)(sb.Height - this.Height) / 2));
+                                                                                (int)((sb.Height - this.Height) / 2)));
                 });
 
                 if(ff?.LocalizedName != "04b_19") {
@@ -117,7 +117,7 @@ namespace SharpFlappyBird {
                 int x;
                 int lx = 0;
                 using(BitmapData bd = bmp.Lock()) {
-                    for(int y = 0; y < layoutRect.Height; y++) { // Flood fill algorythm (see VB6's FormShaper Control)
+                    for(int y = 0; y < layoutRect.Height; y++) { // Flood fill algorithm (see VB6's FormShaper Control)
                         x = 0;
                         while(x < layoutRect.Width) {
                             while(x < layoutRect.Width && bd.GetPixel(x, y) == Colors.Black) x++;

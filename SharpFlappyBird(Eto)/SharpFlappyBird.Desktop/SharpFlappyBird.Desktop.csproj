@@ -3,8 +3,8 @@
   <PropertyGroup>
     <OutputType>WinExe</OutputType>
     <TargetFrameworks>net461</TargetFrameworks>
-    <AssemblyVersion>2020.5.147.136</AssemblyVersion>
-    <FileVersion>2020.5.147.136</FileVersion>
+    <AssemblyVersion>2020.11.27.177</AssemblyVersion>
+    <FileVersion>2020.11.27.177</FileVersion>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|net461|AnyCPU'">
@@ -24,9 +24,9 @@
   </ItemGroup>
 	
   <ItemGroup>
-    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.1" />
-    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.1" />
-    <PackageReference Include="Eto.Platform.Mac64" Version="2.5.1" />
+    <PackageReference Include="Eto.Platform.Wpf" Version="2.5.7" />
+    <PackageReference Include="Eto.Platform.Gtk" Version="2.5.7" />
+    <PackageReference Include="Eto.Platform.Mac64" Version="2.5.7" />
   </ItemGroup>
 	
 </Project>

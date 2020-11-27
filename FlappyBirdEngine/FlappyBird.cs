@@ -173,18 +173,18 @@ namespace SharpFlappyBird {
             set {
                 mScale = value;
 
-#if WINFORMS
-                gameFontLarge?.Dispose();
-                gameFontLarge = new Font(gameFontFamily, 50 * mScale);
-                gameFontSmall?.Dispose();
-                gameFontSmall = new Font(gameFontFamily, 30 * mScale);
-#elif ETOFORMS
-                gameFontLarge?.Dispose();
-                gameFontLarge = new Font(gameFontFamily, 50);
-                gameFontSmall?.Dispose();
-                gameFontSmall = new Font(gameFontFamily, 30);
+                float f = mScale;
+
+#if ETOFORMS
+                if(Platform.Detect.IsGtk) f = 1.0f;
 #endif
+
+                gameFontLarge?.Dispose();
+                gameFontLarge = new Font(gameFontFamily, 50 * f);
+                gameFontSmall?.Dispose();
+                gameFontSmall = new Font(gameFontFamily, 30 * f);
             }
+
         }
 
         private void Up() {
@@ -546,8 +546,9 @@ namespace SharpFlappyBird {
                 path = Path.GetFullPath(Path.Combine(path, "../MacOS/Bass", platform, architecture));
             }
 #endif
+            FileInfo lib = null;
             try {
-                FileInfo lib = new DirectoryInfo(path).GetFiles()[0];
+                lib = new DirectoryInfo(path).GetFiles()[0];
                 if(lib.Exists) {
                     string fileName = Path.GetFullPath(Path.Combine(lib.Name));
 #if ETOFORMS
@@ -568,7 +569,7 @@ namespace SharpFlappyBird {
             }
 
 #if DEBUG
-            Console.WriteLine($"Bass Library: {lib.Name} ({platform} {architecture})");
+            Console.WriteLine($"Bass Library: {(lib == null ? "Unknown" : lib.Name)} ({platform} {architecture})");
 #endif
 
             if(result) {

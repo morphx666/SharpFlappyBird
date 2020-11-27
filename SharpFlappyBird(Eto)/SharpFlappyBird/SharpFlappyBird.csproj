@@ -2,8 +2,8 @@
 	
   <PropertyGroup>
     <TargetFrameworks>netstandard2.0</TargetFrameworks>
-    <AssemblyVersion>2020.5.147.138</AssemblyVersion>
-    <FileVersion>2020.5.147.138</FileVersion>
+    <AssemblyVersion>2020.11.27.180</AssemblyVersion>
+    <FileVersion>2020.11.27.180</FileVersion>
   </PropertyGroup>
 	
   <PropertyGroup Condition="'$(Configuration)|$(TargetFramework)|$(Platform)'=='Release|netstandard2.0|AnyCPU'">
@@ -15,8 +15,8 @@
   </PropertyGroup>
   
   <ItemGroup>
-    <PackageReference Include="Eto.Forms" Version="2.5.1" />
-    <PackageReference Include="Eto.Serialization.Json" Version="2.5.1" />
+    <PackageReference Include="Eto.Forms" Version="2.5.7" />
+    <PackageReference Include="Eto.Serialization.Json" Version="2.5.7" />
     <PackageReference Include="ManagedBass" Version="3.0.0" />
   </ItemGroup>
   
