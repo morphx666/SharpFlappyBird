@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using RayCasting;
 using ManagedBass;
 using System.Diagnostics;
+using System.Linq.Expressions;
 
 namespace SharpFlappyBird {
     public class FlappyBird : Vector {

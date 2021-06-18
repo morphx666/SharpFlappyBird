@@ -5,7 +5,7 @@ using System.Windows.Forms;
 
 namespace SharpFlappyBird {
     public partial class FormMain : Form {
-        private readonly FlappyBird bird;
+        private readonly FlappyBird fbird;
         private readonly PrivateFontCollection fc = new PrivateFontCollection();
 
         public FormMain() {
@@ -21,7 +21,7 @@ namespace SharpFlappyBird {
 
             fc.AddFontFile(GetAsset("font", "flappy.ttf"));
 
-            bird = new FlappyBird(this,
+            fbird = new FlappyBird(this,
                                   Image.FromFile(GetAsset("images", "bird.png")),
                                   bImg,
                                   gImg,
@@ -32,22 +32,22 @@ namespace SharpFlappyBird {
                                   GetAsset("sounds", "gameover.ogg"),
                                   GetAsset("sounds", "song.ogg"));
 
-            bird.Exit += () => this.Close();
+            fbird.Exit += () => this.Close();
 
             this.Shown += (_, __) => {
                 Rectangle sb = Screen.FromControl(this).WorkingArea;
-                while((int)((bImg.Height + gImg.Height) * bird.Scale) > sb.Height - SystemInformation.CaptionHeight) bird.Scale -= 0.05f;
+                while((int)((bImg.Height + gImg.Height) * fbird.Scale) > sb.Height - SystemInformation.CaptionHeight) fbird.Scale -= 0.05f;
 
                 // Resize client area
-                this.ClientSize = new Size((int)(bImg.Width * bird.Scale),
-                                           (int)((bImg.Height + gImg.Height) * bird.Scale));
+                this.ClientSize = new Size((int)(bImg.Width * fbird.Scale),
+                                           (int)((bImg.Height + gImg.Height) * fbird.Scale));
 
                 // Center screen
                 this.Location = new Point((sb.Width - this.Width) / 2,
                                           (sb.Height - this.Height) / 2);
             };
 
-            if(!bird.CanRun) Application.Exit();
+            if(!fbird.CanRun) Application.Exit();
         }
 
         private static string GetAsset(string subFolder, string assetFileName) {
@@ -55,7 +55,7 @@ namespace SharpFlappyBird {
         }
 
         protected override void OnPaint(PaintEventArgs e) {
-            bird.DrawScene(e);
+            fbird.DrawScene(e);
         }
     }
 }

@@ -11,8 +11,8 @@ using Eto.Threading;
 namespace SharpFlappyBird {
     public class MainForm : Form {
         protected Drawable Canvas;
-        private readonly FlappyBird bird;
-        private static Dictionary<FontData, Bitmap> cache = new Dictionary<FontData, Bitmap>();
+        private readonly FlappyBird fbird;
+        private static readonly Dictionary<FontData, Bitmap> cache = new Dictionary<FontData, Bitmap>();
 
         public MainForm() {
             JsonReader.Load(this);
@@ -25,7 +25,7 @@ namespace SharpFlappyBird {
             Image bImg = new Bitmap(GetAsset("images", "background.png"));
             Image gImg = new Bitmap(GetAsset("images", "ground.png"));
 
-            bird = new FlappyBird(Canvas,
+            fbird = new FlappyBird(Canvas,
                                   new Bitmap(GetAsset("images", "bird.png")),
                                   bImg,
                                   gImg,
@@ -36,15 +36,15 @@ namespace SharpFlappyBird {
                                   GetAsset("sounds", "gameover.ogg"),
                                   GetAsset("sounds", "song.ogg"));
 
-            bird.Exit += () => Application.Instance.Quit();
+            fbird.Exit += () => Application.Instance.Quit();
 
             this.Shown += (_, __) => {
                 RectangleF sb = Screen.FromPoint(PointF.Empty).WorkingArea;
-                while((int)((bImg.Height + gImg.Height) * bird.Scale) > sb.Height - 16) bird.Scale -= 0.05f;
+                while((int)((bImg.Height + gImg.Height) * fbird.Scale) > sb.Height - 16) fbird.Scale -= 0.05f;
 
                 // Resize client area
-                this.ClientSize = new Size((int)(bImg.Width * bird.Scale),
-                                           (int)((bImg.Height + gImg.Height) * bird.Scale));
+                this.ClientSize = new Size((int)(bImg.Width * fbird.Scale),
+                                           (int)((bImg.Height + gImg.Height) * fbird.Scale));
 
                 // Center screen
                 Task.Run(() => {
@@ -59,7 +59,7 @@ namespace SharpFlappyBird {
                 }
             };
 
-            Canvas.Paint += (object s, PaintEventArgs e) => bird.DrawScene(e);
+            Canvas.Paint += (object s, PaintEventArgs e) => fbird.DrawScene(e);
         }
 
         private static string GetAsset(string subFolder, string assetFileName) {
